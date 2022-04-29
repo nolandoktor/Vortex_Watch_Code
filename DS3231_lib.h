@@ -66,7 +66,8 @@ void initRTC()
 {
   Wire.begin();
   set1HzClock(0);
-  TWBR = 10;
+  //TWBR = 10;
+    //Not supported on M0
 }
 void set32KHzOut(byte set)
 {

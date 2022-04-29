@@ -27,8 +27,9 @@ void resetButtonStates()
 }
 void enableButtonInterrupts()
 {
-  PCICR |= (1 <<PCIE0);
-  PCMSK0 |= ((1 << PCINT5) | (1 << PCINT6));
+  //PCICR |= (1 <<PCIE0);
+  //PCMSK0 |= ((1 << PCINT5) | (1 << PCINT6));
+    //Not supported on M0
 }
 void initButtonHandler()
 {
@@ -41,6 +42,9 @@ void initButtonHandler()
     longPresses[i] = false;
   }
 }
+
+/*
+//Not supported on M0
 ISR(PCINT0_vect)
 {
   //Serial.println("Interrupt:");
@@ -87,5 +91,5 @@ ISR(PCINT0_vect)
     }
   }
 }
-
+*/
 #endif

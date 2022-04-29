@@ -1,7 +1,7 @@
 //testing testing
 
-#include <avr/sleep.h>
-#include <avr/power.h>`
+//#include <avr/sleep.h>
+//#include <avr/power.h>`
 
 #include <Wire.h>
 #include <LiFuelGauge.h>
@@ -52,16 +52,20 @@ long timeout_timer;
 
 void goToSleep()
 {
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  sleep_enable();
-  sleep_mode(); 
+  
+  //set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  //sleep_enable();
+  //sleep_mode(); 
+    //Not supported on M0
+  
 }
 
 int MOSFET = 5;
 void sleepNow();
 void setup() {
-  power_adc_disable();
-  power_spi_disable();
+  //power_adc_disable();
+  //power_spi_disable();
+    //Not supported on M0
   
   pinMode(13, INPUT);
 /*
@@ -74,9 +78,11 @@ void setup() {
   }
 */
 
-  cli();
+  //cli();
+    //Not supported on M0
   enableButtonInterrupts();
-  sei();
+  //sei();
+    //Not supported on M0
 
   
   
@@ -172,6 +178,8 @@ ISR(TIMER2_COMPA_vect)
 */
 void sleepNow()
 {
+    /*
+    //AVR sleep functions or IRQ enable/disable not supported on M0
     cli();
   
     // Choose our preferred sleep mode:
@@ -188,6 +196,7 @@ void sleepNow()
  
     // Upon waking up, sketch continues from this point.
     sleep_disable();
+    */
 }
 void enter_sleep_mode()
 {

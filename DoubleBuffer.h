@@ -6,10 +6,6 @@
 class DoubleBuffer
 {
   private:
-    //LedBuffer buffer1, buffer2;
-    //LedBuffer* wBuf;
-    //LedBuffer* rBuf;
-    
     Adafruit_NeoPixel *strip;  
     
   public:
@@ -21,12 +17,6 @@ class DoubleBuffer
     //int getColorVal(int idx, int color_idx);
     void clear();
     void update();
-    //void copyReadToWrite();
-
-    //Optional
-    //LedBuffer* getReadBuffer() {return rBuf;}
-    //LedBuffer* getWriteBuffer() {return wBuf;}
-  
 };
 DoubleBuffer::DoubleBuffer()
 {
@@ -89,16 +79,6 @@ void DoubleBuffer::clear()
 void DoubleBuffer::update()
 {
   strip->show();
-  
-  /*
-  LedBuffer *temp = rBuf;
-  rBuf = wBuf;
-  wBuf = temp;
-  */
 }
-//void DoubleBuffer::copyReadToWrite()
-//{
-//  wBuf->copyFrom(rBuf);
-//}
 
 #endif
