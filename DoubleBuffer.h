@@ -1,12 +1,16 @@
 #ifndef DOUBLE_BUFFER_LIB
 #define DOUBLE_BUFFER_LIB
 
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
+#include <FastLED.h>
 #define NEOPIX_PIN 6
+
+static CRGB leds[N_LEDS];
+
 class DoubleBuffer
 {
   private:
-    Adafruit_NeoPixel *strip;  
+    //Adafruit_NeoPixel *strip;  
     
   public:
     static const int R = 0, G = 1, B = 2;
@@ -14,23 +18,33 @@ class DoubleBuffer
     void reset();
     void setColorVal(int idx, int color_idx, int val);
     void setColorVal(int idx, int rVal, int gVal, int bVal);
-    //int getColorVal(int idx, int color_idx);
+    CRGB getColorVal(int idx) {return leds[idx];}
     void clear();
     void update();
 };
 DoubleBuffer::DoubleBuffer()
 {
+  /*
   strip = new Adafruit_NeoPixel(N_LEDS, NEOPIX_PIN);
   strip->begin();
   strip->show();
-  
+  */
+
+  FastLED.addLeds<NEOPIXEL, NEOPIX_PIN>(leds, N_LEDS);
+  FastLED.clear(true);
+  //FastLED.show();
+
   //reset();
 }
 void DoubleBuffer::reset()
 {
+  /*
   strip->clear();
   strip->show();
-  
+  */
+
+  FastLED.clear(true);
+
   //buffer1.clear();
   //buffer2.clear();
   //wBuf = &buffer1;
@@ -38,6 +52,7 @@ void DoubleBuffer::reset()
 }
 void DoubleBuffer::setColorVal(int idx, int color_idx, int val)
 {
+  /*
   uint32_t c = strip->getPixelColor(idx);
   uint8_t rgb[3];
   rgb[0] = (uint8_t)(c >> 16);
@@ -56,12 +71,27 @@ void DoubleBuffer::setColorVal(int idx, int color_idx, int val)
       strip->setPixelColor(idx, rgb[0], rgb[1], val);
       break;
   }
+  */
+  switch (color_idx)
+  {
+    case 0:
+      leds[idx].r = val;
+      break;
+    case 1:
+      leds[idx].g = val;
+      break;
+    case 2:
+      leds[idx].b = val;
+      break;
+  }
   
   //wBuf->setColorVal(idx, color_idx, val);
 }
 void DoubleBuffer::setColorVal(int idx, int rVal, int gVal, int bVal)
 {
-  strip->setPixelColor(idx, rVal, gVal, bVal);
+  leds[idx].setRGB(rVal, gVal, bVal);
+  
+  //strip->setPixelColor(idx, rVal, gVal, bVal);
   
   //wBuf->setColorVal(idx, rVal, gVal, bVal);
 }
@@ -72,13 +102,17 @@ void DoubleBuffer::setColorVal(int idx, int rVal, int gVal, int bVal)
 //}
 void DoubleBuffer::clear()
 {
-  strip->clear();
+  FastLED.clear();
+
+  //strip->clear();
 
   //wBuf->clear();
 }
 void DoubleBuffer::update()
 {
-  strip->show();
+  FastLED.show();
+
+  //strip->show();
 }
 
 #endif
