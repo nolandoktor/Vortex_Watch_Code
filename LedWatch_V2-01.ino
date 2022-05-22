@@ -246,11 +246,11 @@ void wake_from_sleep()
   digitalWrite(MOSFET, HIGH);
 }
 
-
-
+volatile bool tick_ready = false;
 void tickClock()
 {
   testClock.update();
+  tick_ready = true;
 }
 
 
@@ -390,15 +390,18 @@ void loop()
   update_timer = millis();
   while (1)
   {
-    if (millis() - update_timer >= 1000)
+    //if (millis() - update_timer >= 1000)
+    if (tick_ready)
     {
+      tick_ready = false;
       //testClock.update();
       update_timer = millis();
+      Serial.println(update_timer);
       testClock.printClock();
       rtc_display_time();
       Serial.print("State: ");
       Serial.println(state_var);
-      Serial.println();
+      Serial.println("\n");
     }
 
 
@@ -458,6 +461,8 @@ void loop()
         
         if (enterSleep)
         {
+          lBuffer->clear();
+          lBuffer->update();
           enter_sleep_mode();
           //break;
         }
@@ -473,12 +478,30 @@ void loop()
           state_change = true;
           byte sec_, min_, hour_;
           //readDS3231time (&sec_, &min_, &hour_);
-          rtc_get_time(&sec_, &min_, &hour_);
-          testClock.initClock((int)hour_, (int)min_, (int)sec_);
+
+          rtc_set_clkout(CLK_1HZ);
+          delay(10);
           
+          while (digitalRead(clockInterruptPin) == HIGH);
+          while (digitalRead(clockInterruptPin) == LOW);
+
+          rtc_get_time(&sec_, &min_, &hour_);
+          Serial.print("Sec: ");
+          Serial.println(sec_);
+          Serial.print("Min: ");
+          Serial.println(min_);
+          Serial.print("Hour: ");
+          Serial.println(hour_);
+
+          testClock.initClock(hour_, min_, sec_);
+          testClock.printClock();
+          Serial.println("-------------");
+          
+
+          //rtc_set_clkout(CLK_1HZ);
+          //delay(10);
           attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
           //set1HzClock(0);
-          rtc_set_clkout(CLK_1HZ);
           pinMode(NEOPIX_PIN, OUTPUT);
           digitalWrite(MOSFET, HIGH);
         }
@@ -656,7 +679,14 @@ void loop()
           state_var = AWAKE;
           state_change = true;
           testClock.initClock(hour_temp, min_temp, 0);
-          setDS3231time(testClock.getSeconds(), testClock.getMinutes(), testClock.getHours(),2,22,02,16);
+          //setDS3231time(testClock.getSeconds(), testClock.getMinutes(), testClock.getHours(),2,22,02,16);
+          //rtc_set_time(0, min_temp, hour_temp);
+          if (rtc_set_datetime(0, min_temp, hour_temp, RTC_SUNDAY, 1, 05, 22) < 0) {
+            Serial.println("Error: Failed to set time");
+          }
+          else {
+            Serial.println("Time set successfully");
+          }
         }
         else if (millis() - timeout_timer >= timeout_val)
         {
