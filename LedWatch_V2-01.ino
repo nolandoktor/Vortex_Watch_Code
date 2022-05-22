@@ -5,7 +5,7 @@
 
 #include <Wire.h>
 #include <LiFuelGauge.h>
-
+#include <SparkFun_RV8803.h>
 
 #include "DS3231_lib.h"
 //#include "LedBuffer.h"
@@ -16,6 +16,9 @@
 #include "WatchFace.h"
 #include "ButtonHandler.h"
 #include "Game.h"
+#include "RTC_API.h"
+
+
 
 //#define FPS 90.0
 volatile byte sec_, min_, hour_, weekday_, day_, month_, year_;
@@ -96,10 +99,15 @@ void setup() {
   digitalWrite(MOSFET, HIGH);
 
   
-  initRTC();
-  setDS3231time(30,24,23,2,22,02,16);
+  //initRTC();
+  //setDS3231time(30,24,23,2,22,02,16);
+
+  rtc_init();
+  rtc_set_datetime(10, 38, 21, RTC_SUNDAY, 1, 05, 22);
+
   byte sec_, min_, hour_;
-  readDS3231time (&sec_, &min_, &hour_);
+  //readDS3231time (&sec_, &min_, &hour_);
+  rtc_get_time (&sec_, &min_, &hour_);
   testClock.initClock((int)hour_, (int)min_, (int)sec_);
   
   //watchFace = new StandardFace(&testClock);
@@ -130,7 +138,8 @@ void setup() {
   //enableButtonInterrupts();
   //sei();
 
-  
+
+
 }
 
 /*
@@ -216,7 +225,8 @@ void enter_sleep_mode()
   //lBuffer->update();
   pinMode(NEOPIX_PIN, INPUT_PULLUP);
   digitalWrite(MOSFET, LOW);
-  set1HzClock(1);
+  //set1HzClock(1);
+  rtc_set_clkout(CLK_DISABLED);
   //goToSleep();
   
   //digitalWrite(13, HIGH);
@@ -230,8 +240,8 @@ void wake_from_sleep()
 {
   
   attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
-  set1HzClock(0);
-  //turnOnDrawingISR();
+  //set1HzClock(0);
+  rtc_set_clkout(CLK_1HZ);
   pinMode(NEOPIX_PIN, OUTPUT);
   digitalWrite(MOSFET, HIGH);
 }
@@ -384,6 +394,11 @@ void loop()
     {
       //testClock.update();
       update_timer = millis();
+      testClock.printClock();
+      rtc_display_time();
+      Serial.print("State: ");
+      Serial.println(state_var);
+      Serial.println();
     }
 
 
@@ -457,12 +472,13 @@ void loop()
           state_var = AWAKE;
           state_change = true;
           byte sec_, min_, hour_;
-          readDS3231time (&sec_, &min_, &hour_);
+          //readDS3231time (&sec_, &min_, &hour_);
+          rtc_get_time(&sec_, &min_, &hour_);
           testClock.initClock((int)hour_, (int)min_, (int)sec_);
           
           attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
-          set1HzClock(0);
-          turnOnDrawingISR();
+          //set1HzClock(0);
+          rtc_set_clkout(CLK_1HZ);
           pinMode(NEOPIX_PIN, OUTPUT);
           digitalWrite(MOSFET, HIGH);
         }
