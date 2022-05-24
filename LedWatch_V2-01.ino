@@ -1,8 +1,3 @@
-//testing testing
-
-//#include <avr/sleep.h>
-//#include <avr/power.h>`
-
 #include <Wire.h>
 #include <LiFuelGauge.h>
 #include <SparkFun_RV8803.h>
@@ -17,7 +12,7 @@
 #include "ButtonHandler.h"
 #include "Game.h"
 #include "RTC_API.h"
-
+#include <ArduinoLowPower.h>
 
 
 //#define FPS 90.0
@@ -206,6 +201,7 @@ void sleepNow()
     // Upon waking up, sketch continues from this point.
     sleep_disable();
     */
+   LowPower.deepSleep();
 }
 void enter_sleep_mode()
 {

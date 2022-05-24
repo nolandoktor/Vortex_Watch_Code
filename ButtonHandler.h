@@ -1,6 +1,8 @@
 #ifndef BUTTON_HANDLER_LIB
 #define BUTTON_HANDLER_LIB
 
+#include <ArduinoLowPower.h>
+
 #define BUTTON0_PIN 4
 #define BUTTON1_PIN 3
 
@@ -44,7 +46,8 @@ void initButtonHandler()
   }
   //Attach interrupt handlers for pins 
   attachInterrupt(digitalPinToInterrupt(intPins[0]), button0_interrupt_handler, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
+  LowPower.attachInterruptWakeup(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
 }
 
 void button_function(int idx)
@@ -62,16 +65,13 @@ void button_function(int idx)
     Serial.print(intPins[idx]);
     Serial.println(" released");
     int32_t delta = event_ts - timers[idx];
-    if (delta < 200) {
+    if (delta < 500) {
       Serial.println("Short Press");
       shortPresses[idx] = true;
     }
-    else if (delta < 2000){
+    else{
       Serial.println("Long Press");
       longPresses[idx] = true;
-    }
-    else {
-      Serial.println("Extra Long Press");
     }
   }
 }
