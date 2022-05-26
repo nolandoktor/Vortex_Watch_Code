@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "StateManager.h"
 #include "StateElement.h"
-#include "GlobalDefines.h"
-#include "ButtonHandler.h"
+#include "../Misc/GlobalDefines.h"
+#include "../Input/ButtonHandler.h"
 
 StateManager::StateManager()
 {

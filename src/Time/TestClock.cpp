@@ -1,10 +1,8 @@
-#ifndef TEST_CLK_LIB
-#define TEST_CLK_LIB
+#include <Arduino.h>
+#include "TestClock.h"
+#include "../Misc/GlobalDefines.h"
 
-//#include <Arduino.h>
-//#include "DoubleBuffer.h"
-//#include "GlobalDefines.h"
-
+/*
 class TestClock
 {
   private:
@@ -22,7 +20,7 @@ class TestClock
     void update() volatile;
     void printClock() volatile;
 };
-/*
+*/
 TestClock::TestClock(byte h_, byte m_, byte s_)
 {
   initClock(h_, m_, s_);
@@ -75,7 +73,4 @@ void TestClock::printClock() volatile
   Serial.print(getMinutes());
   Serial.print(":");
   Serial.println(getSeconds());
-
 }
-*/
-#endif

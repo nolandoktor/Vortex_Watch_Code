@@ -2,8 +2,8 @@
 #define GAME_LIB
 
 #include <Arduino.h>
-#include "DoubleBuffer.h"
-#include "GlobalDefines.h"
+#include "src/Display/DoubleBuffer.h"
+#include "src/Misc/GlobalDefines.h"
 #include "LedBuffer.h"
 
 class Game

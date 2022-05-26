@@ -3,8 +3,8 @@
 //---------------------
 
 #include <Arduino.h>
-#include "ButtonHandler.h"
 #include <ArduinoLowPower.h>
+#include "ButtonHandler.h"
 
 #define BUTTON0_PIN 4
 #define BUTTON1_PIN 3

@@ -1,8 +1,8 @@
 #ifndef STATE_MANAGER_LIB
 #define STATE_MANAGER_LIB
 
-#include "GlobalDefines.h"
 #include "StateElement.h"
+#include "../Misc/GlobalDefines.h"
 
 #define STATE_MANAGER_SCRATCH 64
 

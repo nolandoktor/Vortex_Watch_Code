@@ -2,7 +2,7 @@
 #define LED_DRIVE_LIB
 
 #include <Arduino.h>
-#include "GlobalDefines.h"
+#include "src/Misc/GlobalDefines.h"
 
 #define COMMON_GND_LED true
 #if COMMON_GND_LED 

@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include "WatchFace.h"
-#include "TestClock.h"
-#include "GlobalDefines.h"
 #include "DoubleBuffer.h"
+#include "../Time/TestClock.h"
+#include "../Misc/GlobalDefines.h"
+
 
 void StandardFace::draw(DoubleBuffer *lBuffer)
 {

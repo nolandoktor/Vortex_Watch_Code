@@ -2,9 +2,10 @@
 #define WATCH_FACE_LIB
 
 #include <Arduino.h>
-#include "TestClock.h"
-#include "GlobalDefines.h"
 #include "DoubleBuffer.h"
+#include "../Time/TestClock.h"
+#include "../Misc/GlobalDefines.h"
+
 
 class WatchFace
 {

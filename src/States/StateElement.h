@@ -2,11 +2,11 @@
 #define STATE_ELEMENT_LIB
 
 #include <LiFuelGauge.h>
-#include "DoubleBuffer.h"
-#include "GlobalDefines.h"
 #include "StateManager.h"
-#include "TestClock.h"
-#include "WatchFace.h"
+#include "../Misc/GlobalDefines.h"
+#include "../Time/TestClock.h"
+#include "../Display/DoubleBuffer.h"
+#include "../Display/WatchFace.h"
 
 class StateManager;
 class StateElement {

@@ -3,7 +3,7 @@
 
 //#include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
-#include "GlobalDefines.h"
+#include "../Misc/GlobalDefines.h"
 #define NEOPIX_PIN 6
 
 //static CRGB leds[N_LEDS];

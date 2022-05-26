@@ -1,13 +1,14 @@
 
 #include <Arduino.h>
 #include <LiFuelGauge.h>
-#include "StateManager.h"
 #include "StateElement.h"
-#include "GlobalDefines.h"
-#include "ButtonHandler.h"
-#include "RTC_API.h"
-#include "TestClock.h"
-#include "WatchFace.h"
+#include "StateManager.h"
+#include "../Misc/GlobalDefines.h"
+#include "../Input/ButtonHandler.h"
+#include "../Time/RTC_API.h"
+#include "../Time/TestClock.h"
+#include "../Display/DoubleBuffer.h"
+#include "../Display/WatchFace.h"
 
 StateElement::StateElement(StateManager *sm, DoubleBuffer *fb) 
 {

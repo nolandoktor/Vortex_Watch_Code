@@ -1,21 +1,16 @@
 #include <Wire.h>
 #include <LiFuelGauge.h>
-//#include <SparkFun_RV8803.h>
-
-//#include "DS3231_lib.h"
-//#include "LedBuffer.h"
-#include "DoubleBuffer.h"
-#include "GlobalDefines.h"
+#include "src/Display/DoubleBuffer.h"
+#include "src/Misc/GlobalDefines.h"
 #include "LedDriver.h"
-#include "TestClock.h"
-#include "WatchFace.h"
-#include "ButtonHandler.h"
+#include "src/Time/TestClock.h"
+#include "src/Display/WatchFace.h"
+#include "src/Input/ButtonHandler.h"
 #include "Game.h"
-#include "RTC_API.h"
+#include "src/Time/RTC_API.h"
 #include <ArduinoLowPower.h>
-//#include "States/WatchStates.h"
-#include "StateElement.h"
-#include "StateManager.h"
+#include "src/States/StateElement.h"
+#include "src/States/StateManager.h"
 
 //#define FPS 90.0
 volatile byte sec_, min_, hour_, weekday_, day_, month_, year_;
@@ -157,8 +152,6 @@ void setup() {
   //cli();
   //enableButtonInterrupts();
   //sei();
-
-
 
 }
 

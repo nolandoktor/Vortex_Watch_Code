@@ -2,7 +2,7 @@
 #define DS3231_LIB
 #include <Arduino.h>
 #include <Wire.h>
-#include "GlobalDefines.h"
+#include "../Misc/GlobalDefines.h"
 
 #define DS3231_I2C_ADDRESS 0x68
 #define SEC_REG 0x00

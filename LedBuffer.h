@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "GlobalDefines.h"
+#include "src/Misc/GlobalDefines.h"
 
 //#define N_LEDS 12
 
