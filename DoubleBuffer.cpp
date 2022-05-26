@@ -1,17 +1,14 @@
-#ifndef DOUBLE_BUFFER_LIB
-#define DOUBLE_BUFFER_LIB
-
-//#include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
+#include "DoubleBuffer.h"
 #include "GlobalDefines.h"
-#define NEOPIX_PIN 6
+//#define NEOPIX_PIN 6
 
 //static CRGB leds[N_LEDS];
-
+/*
 class DoubleBuffer
 {
   private:
-    CRGB leds[N_LEDS];  
+    //Adafruit_NeoPixel *strip;  
     
   public:
     static const int R = 0, G = 1, B = 2;
@@ -23,7 +20,7 @@ class DoubleBuffer
     void clear();
     void update();
 };
-/*
+*/
 DoubleBuffer::DoubleBuffer()
 {
   FastLED.addLeds<NEOPIXEL, NEOPIX_PIN>(leds, N_LEDS);
@@ -60,5 +57,4 @@ void DoubleBuffer::update()
 {
   FastLED.show();
 }
-*/
-#endif
+

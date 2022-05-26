@@ -10,7 +10,17 @@
 #define TIMER_CMP CLK_FREQ/(PRE_SCALE*FPS*N_LEDS*COLOR_RES)
 #define TIMER_CMP_DEFAULT 80
 
-volatile int isrFlag = true;
+//volatile int isrFlag = true;
+
+typedef enum {
+  SLEEP_STATE, 
+  AWAKE_STATE, 
+  SET_HOUR_STATE, 
+  SET_MIN_STATE, 
+  TIMING_GAME_STATE, 
+  BATTERY_LEVEL_STATE, 
+  NUM_WATCH_STATES
+} watch_state_t;
 
 #endif
 

@@ -1,8 +1,8 @@
 #include <Wire.h>
 #include <LiFuelGauge.h>
-#include <SparkFun_RV8803.h>
+//#include <SparkFun_RV8803.h>
 
-#include "DS3231_lib.h"
+//#include "DS3231_lib.h"
 //#include "LedBuffer.h"
 #include "DoubleBuffer.h"
 #include "GlobalDefines.h"
@@ -13,17 +13,23 @@
 #include "Game.h"
 #include "RTC_API.h"
 #include <ArduinoLowPower.h>
-
+//#include "States/WatchStates.h"
+#include "StateElement.h"
+#include "StateManager.h"
 
 //#define FPS 90.0
 volatile byte sec_, min_, hour_, weekday_, day_, month_, year_;
 volatile bool useRTC = false;
 
-//bool isrFlag = true;
 WatchFace *watchFace = NULL;
 Game *watchGame = NULL;
 volatile TestClock testClock;
 DoubleBuffer *lBuffer;
+
+//Setup States
+StateManager state_manager;
+SleepState *sleep_state = NULL;
+AwakeState *awake_state = NULL;
 
 LiFuelGauge *gauge;
 double battery_threshold = 28;
@@ -60,7 +66,14 @@ void goToSleep()
 
 int MOSFET = 5;
 void sleepNow();
+
 void setup() {
+  Serial.begin(115200);
+  delay(2000);
+  Serial.println("Bootloader running...");
+  delay(4000);
+  Serial.println("Exiting bootloader...");
+
   //power_adc_disable();
   //power_spi_disable();
     //Not supported on M0
@@ -89,7 +102,7 @@ void setup() {
 
   gauge = new LiFuelGauge(MAX17043);
   lBuffer = new DoubleBuffer();
-  
+
   pinMode(MOSFET, OUTPUT);
   digitalWrite(MOSFET, HIGH);
 
@@ -111,6 +124,18 @@ void setup() {
   
   watchGame = new TimingGame(longPresses, shortPresses, 2);
 
+  sleep_state = new SleepState(&state_manager, lBuffer, &testClock, gauge);
+  awake_state = new AwakeState(&state_manager, lBuffer, watchFace);
+
+  state_manager.assign_state(SLEEP_STATE, (StateElement*)sleep_state);
+  state_manager.assign_state(AWAKE_STATE, (StateElement*)awake_state);
+
+  if (state_manager.init(AWAKE_STATE) < 0) {
+    Serial.println("State Manager init failed");
+  }
+  else {
+    Serial.println("State Manager init successful");
+  }
   
   
   initButtonHandler();  
@@ -257,6 +282,13 @@ double warning_flash = 1.0;
 int warning_dir = -1;
 void loop() 
 {
+  
+  while (1) {
+    state_manager.update();
+    delay(10);
+  }
+  
+
   /*
   double chargeLevel = 4;//chg;
   int charge_idx = (int)(N_LEDS*chargeLevel/100);
@@ -421,27 +453,7 @@ void loop()
         if (state_change)
         {
           state_change = false;
-
           enterSleep = true;
-          /*
-          detachInterrupt(digitalPinToInterrupt(clockInterruptPin));
-          //turnOffDrawingISR();
-          //turnOffSinks();
-          //turnOffSources();
-          //for (int i=0; i<2; i++)
-          //{
-          //  digitalWrite(rPWM_[i], 0);
-          //  digitalWrite(gPWM_[i], 0);
-          //  digitalWrite(bPWM_[i], 0);
-          //}
-
-          lBuffer->clear();
-          lBuffer->update();
-
-          
-          set1HzClock(1);
-          goToSleep();
-          */
         }
 
 
@@ -511,8 +523,6 @@ void loop()
           state_change = false;
         }
         
-        //testClock.draw(lBuffer);
-        //testClock.printClock();
         watchFace->update();
         watchFace->draw(lBuffer);
         lBuffer->update();
