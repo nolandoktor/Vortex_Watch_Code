@@ -1,5 +1,4 @@
-#ifndef BUTTON_HANDLER_LIB
-#define BUTTON_HANDLER_LIB
+#pragma once
 
 enum Buttons
 {
@@ -14,4 +13,3 @@ void resetButtonStates();
 void enableButtonInterrupts();
 void initButtonHandler();
 
-#endif

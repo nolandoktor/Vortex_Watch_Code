@@ -1,5 +1,4 @@
-#ifndef STATE_MANAGER_LIB
-#define STATE_MANAGER_LIB
+#pragma once
 
 #include "StateElement.h"
 #include "../Misc/GlobalDefines.h"
@@ -20,5 +19,3 @@ class StateManager
     int change_state(watch_state_t next_state);
     int update();
 };
-
-#endif

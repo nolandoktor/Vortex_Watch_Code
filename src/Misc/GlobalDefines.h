@@ -1,5 +1,4 @@
-#ifndef GLOBAL_DEFINES
-#define GLOBAL_DEFINES
+#pragma once
 
 #define N_LEDS 12
 //#define COLOR_RES 10 /*28*/
@@ -21,7 +20,3 @@ typedef enum {
   BATTERY_LEVEL_STATE, 
   NUM_WATCH_STATES
 } watch_state_t;
-
-#endif
-
-

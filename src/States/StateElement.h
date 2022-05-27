@@ -1,5 +1,4 @@
-#ifndef STATE_ELEMENT_LIB
-#define STATE_ELEMENT_LIB
+#pragma once
 
 #include <LiFuelGauge.h>
 #include "StateManager.h"
@@ -49,5 +48,3 @@ class AwakeState : public StateElement {
     int update();
     const char* get_name() {return "AWAKE_STATE";} 
 };
-
-#endif

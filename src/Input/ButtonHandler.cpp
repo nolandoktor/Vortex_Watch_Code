@@ -5,17 +5,10 @@
 #include <Arduino.h>
 #include <ArduinoLowPower.h>
 #include "ButtonHandler.h"
+#include "../Misc/PinMapping.h"
 
-#define BUTTON0_PIN 4
-#define BUTTON1_PIN 3
-
-/*
-enum Buttons
-{
-  up_button,
-  down_button
-};
-*/
+//#define BUTTON0_PIN 4
+//#define BUTTON1_PIN 3
 
 //Button interrupt variables
 static int intPins[2] = {BUTTON0_PIN, BUTTON1_PIN};

@@ -1,5 +1,5 @@
-#ifndef DS3231_LIB
-#define DS3231_LIB
+#pragma once
+
 #include <Arduino.h>
 #include <Wire.h>
 #include "../Misc/GlobalDefines.h"
@@ -27,9 +27,6 @@
 #define AGE_REG 0x10
 #define TEMP_MSB_REG 0x11
 #define TEMP_LSB_REG 0x12
-
-
-
 
 
 byte decToBcd(byte val)
@@ -332,7 +329,3 @@ void displayTime()
     break;
   }
 }
-
-
-
-#endif

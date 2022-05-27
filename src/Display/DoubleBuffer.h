@@ -1,12 +1,8 @@
-#ifndef DOUBLE_BUFFER_LIB
-#define DOUBLE_BUFFER_LIB
+#pragma once
 
-//#include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
 #include "../Misc/GlobalDefines.h"
 #define NEOPIX_PIN 6
-
-//static CRGB leds[N_LEDS];
 
 class DoubleBuffer
 {
@@ -23,42 +19,3 @@ class DoubleBuffer
     void clear();
     void update();
 };
-/*
-DoubleBuffer::DoubleBuffer()
-{
-  FastLED.addLeds<NEOPIXEL, NEOPIX_PIN>(leds, N_LEDS);
-  FastLED.clear(true);
-}
-void DoubleBuffer::reset()
-{
-  FastLED.clear(true);
-}
-void DoubleBuffer::setColorVal(int idx, int color_idx, int val)
-{
-  switch (color_idx)
-  {
-    case 0:
-      leds[idx].r = val;
-      break;
-    case 1:
-      leds[idx].g = val;
-      break;
-    case 2:
-      leds[idx].b = val;
-      break;
-  }
-}
-void DoubleBuffer::setColorVal(int idx, int rVal, int gVal, int bVal)
-{
-  leds[idx].setRGB(rVal, gVal, bVal);
-}
-void DoubleBuffer::clear()
-{
-  FastLED.clear();
-}
-void DoubleBuffer::update()
-{
-  FastLED.show();
-}
-*/
-#endif
