@@ -1,29 +1,11 @@
 #include <FastLED.h>
 #include "DoubleBuffer.h"
 #include "../Misc/GlobalDefines.h"
-//#define NEOPIX_PIN 6
+#include "../Misc/PinMapping.h"
 
-//static CRGB leds[N_LEDS];
-/*
-class DoubleBuffer
-{
-  private:
-    //Adafruit_NeoPixel *strip;  
-    
-  public:
-    static const int R = 0, G = 1, B = 2;
-    DoubleBuffer();
-    void reset();
-    void setColorVal(int idx, int color_idx, int val);
-    void setColorVal(int idx, int rVal, int gVal, int bVal);
-    CRGB getColorVal(int idx) {return leds[idx];}
-    void clear();
-    void update();
-};
-*/
 DoubleBuffer::DoubleBuffer()
 {
-  FastLED.addLeds<NEOPIXEL, NEOPIX_PIN>(leds, N_LEDS);
+  FastLED.addLeds<NEOPIXEL, LED_DAT_PIN>(leds, N_LEDS);
   FastLED.clear(true);
 }
 void DoubleBuffer::reset()

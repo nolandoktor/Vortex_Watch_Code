@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <LiFuelGauge.h>
 #include "src/Display/DoubleBuffer.h"
+#include "src/Misc/PinMapping.h"
 #include "src/Misc/GlobalDefines.h"
 #include "LedDriver.h"
 #include "src/Time/TestClock.h"
@@ -73,13 +74,13 @@ void setup() {
   //power_spi_disable();
     //Not supported on M0
   
-  pinMode(13, INPUT);
+  pinMode(DEBUG_LED_PIN, OUTPUT);
 /*
   for (int i=0; i<5; i++)
   {
-    digitalWrite(13, HIGH);
+    digitalWrite(DEBUG_LED_PIN, HIGH);
     delay(500);
-    digitalWrite(13, LOW);
+    digitalWrite(DEBUG_LED_PIN, LOW);
     delay(500);
   }
 */
@@ -98,8 +99,8 @@ void setup() {
   gauge = new LiFuelGauge(MAX17043);
   lBuffer = new DoubleBuffer();
 
-  pinMode(MOSFET, OUTPUT);
-  digitalWrite(MOSFET, HIGH);
+  pinMode(LED_MOSFET_EN_PIN, OUTPUT);
+  digitalWrite(LED_MOSFET_EN_PIN, HIGH);
 
   
   //initRTC();
@@ -136,17 +137,17 @@ void setup() {
   initButtonHandler();  
 
   /*
-  digitalWrite(13, HIGH);
+  digitalWrite(DEBUG_LED_PIN, HIGH);
   sleepNow();
-  digitalWrite(13, LOW);
+  digitalWrite(DEBUG_LED_PIN, LOW);
   */
   
   gauge->reset();    
 
   
 
-  pinMode(clockInterruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
+  pinMode(CLK_1HZ_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(CLK_1HZ_PIN), tickClock, RISING);
 
   //Setup interrupt
   //cli();
@@ -237,18 +238,18 @@ void enter_sleep_mode()
   */
   //lBuffer->clear();
   //lBuffer->update();
-  pinMode(NEOPIX_PIN, INPUT_PULLUP);
-  digitalWrite(MOSFET, LOW);
+  pinMode(LED_DAT_PIN, INPUT_PULLUP);
+  digitalWrite(LED_MOSFET_EN_PIN, LOW);
   //set1HzClock(1);
   rtc_set_clkout(CLK_DISABLED);
   //goToSleep();
   
-  //digitalWrite(13, HIGH);
+  //digitalWrite(DEBUG_LED_PIN, HIGH);
   //delay(1000);
   //PCICR &= ~(1 << PCIE0);
   sleepNow();
   //PCICR |= (1 << PCIE0);
-  //digitalWrite(13, LOW);
+  //digitalWrite(DEBUG_LED_PIN, LOW);
 }
 void wake_from_sleep()
 {
@@ -256,8 +257,8 @@ void wake_from_sleep()
   attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
   //set1HzClock(0);
   rtc_set_clkout(CLK_1HZ);
-  pinMode(NEOPIX_PIN, OUTPUT);
-  digitalWrite(MOSFET, HIGH);
+  pinMode(LED_DAT_PIN, OUTPUT);
+  digitalWrite(LED_MOSFET_EN_PIN, HIGH);
 }
 
 volatile bool tick_ready = false;
@@ -435,13 +436,13 @@ void loop()
       //Serial.println(gauge->getSOC());
     }
     
-    //digitalWrite(13, LOW);
+    //digitalWrite(DEBUG_LED_PIN, LOW);
     prev_state = state_var;
     switch (state_var)
     {
       case SLEEP:
       {
-        //digitalWrite(13, HIGH);
+        //digitalWrite(DEBUG_LED_PIN, HIGH);
         bool enterSleep = false;
         if (state_change)
         {
@@ -503,8 +504,8 @@ void loop()
           //delay(10);
           attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
           //set1HzClock(0);
-          pinMode(NEOPIX_PIN, OUTPUT);
-          digitalWrite(MOSFET, HIGH);
+          pinMode(LED_DAT_PIN, OUTPUT);
+          digitalWrite(LED_MOSFET_EN_PIN, HIGH);
         }
         resetButtonStates();
         break;

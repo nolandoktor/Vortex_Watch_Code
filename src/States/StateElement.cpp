@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 #include <LiFuelGauge.h>
 #include "StateElement.h"
@@ -57,8 +56,8 @@ int SleepState::update()
         rtc_set_clkout(CLK_1HZ);
         delay(10);
         
-        while (digitalRead(clockInterruptPin) == HIGH);
-        while (digitalRead(clockInterruptPin) == LOW);
+        while (digitalRead(CLK_1HZ_PIN) == HIGH);
+        while (digitalRead(CLK_1HZ_PIN) == LOW);
         */
 
         rtc_get_time(&sec_, &min_, &hour_);
@@ -77,10 +76,10 @@ int SleepState::update()
         /*
         //rtc_set_clkout(CLK_1HZ);
         //delay(10);
-        attachInterrupt(digitalPinToInterrupt(clockInterruptPin), tickClock, RISING);
+        attachInterrupt(digitalPinToInterrupt(CLK_1HZ_PIN), tickClock, RISING);
         //set1HzClock(0);
-        pinMode(NEOPIX_PIN, OUTPUT);
-        digitalWrite(MOSFET, HIGH);
+        pinMode(LED_DAT_PIN, OUTPUT);
+        digitalWrite(LED_MOSFET_EN_PIN, HIGH);
         */
     }
 
