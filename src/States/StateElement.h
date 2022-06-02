@@ -13,6 +13,7 @@ class StateElement {
     static const int SLEEP_TIMEOUT = 150000;
     StateManager *state_manager;
     DoubleBuffer *frame_buffer;
+    virtual int change_state(watch_state_t next_state, bool state_change);
 
   public:
     StateElement(StateManager *sm, DoubleBuffer *fb);
@@ -21,6 +22,7 @@ class StateElement {
     virtual int on_exit(watch_state_t next_state) {return 0;}
     virtual int update() {return 0;}
     virtual const char* get_name() {return "INVALID_STATE";} 
+    
 };
 
 class SleepState : public StateElement {
@@ -42,9 +44,63 @@ class AwakeState : public StateElement {
     WatchFace *watchFace;
     uint32_t timeout_timer;
   public:
-    AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFace *watchFace);
+    AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFace *wf);
     int init();
     int on_enter(watch_state_t prev_state);
     int update();
     const char* get_name() {return "AWAKE_STATE";} 
+};
+
+class SetHourState : public StateElement {
+  private:
+    volatile TestClock *clock;
+    uint32_t timeout_timer;
+    int8_t hour;
+    uint16_t flash_cnt;
+    uint16_t flash_period;
+    static const uint16_t DEFAULT_FLASH_PERIOD = 50;
+  public:
+    SetHourState(StateManager *sm, DoubleBuffer *fb, volatile TestClock *tc);
+    int init();
+    int on_enter(watch_state_t prev_state);
+    int on_exit(watch_state_t next_state);
+    int update();
+    const char* get_name() {return "SET_HOUR_STATE";} 
+    int set_flash_period(uint16_t fp) {flash_period = fp;}
+};
+
+class SetMinuteState : public StateElement {
+  private:
+    volatile TestClock *clock;
+    uint32_t timeout_timer;
+    int8_t hour;
+    int8_t minute;
+    uint16_t flash_cnt;
+    uint16_t flash_period;
+    static const uint16_t DEFAULT_FLASH_PERIOD = 50;
+  public:
+    SetMinuteState(StateManager *sm, DoubleBuffer *fb, volatile TestClock *tc);
+    int init();
+    int on_enter(watch_state_t prev_state);
+    int on_exit(watch_state_t next_state);
+    int update();
+    const char* get_name() {return "SET_MINUTE_STATE";} 
+    int set_flash_period(uint16_t fp) {flash_period = fp;}
+};
+
+class BatteryState : public StateElement {
+  private:
+    LiFuelGauge *fuel_gauge;
+    int charge_level;
+    double warning_flash;
+    int8_t warning_dir;
+    uint32_t timeout_timer;
+    static constexpr double WARNING_THRESH_LOW = 0.25;
+    static constexpr double WARNING_THRESH_HIGH = 1.0;
+  public:
+    BatteryState(StateManager *sm, DoubleBuffer *fb, LiFuelGauge *fg);
+    int init();
+    int on_enter(watch_state_t prev_state);
+    int update();
+    const char* get_name() {return "BATTERY_STATE";} 
 };

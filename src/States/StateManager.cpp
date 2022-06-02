@@ -46,6 +46,10 @@ int StateManager::change_state(watch_state_t next_state)
   if (state_list[current_state] == NULL) {
     return -1;
   }
+  if (state_list[next_state] == NULL) {
+    return -1;
+  }
+
   ret = state_list[current_state]->on_exit(next_state);
   Serial.print("Exiting State: ");
   Serial.println(state_list[current_state]->get_name());
@@ -55,10 +59,6 @@ int StateManager::change_state(watch_state_t next_state)
   
   watch_state_t prev_state = current_state;
   current_state = next_state;
-
-  if (state_list[current_state] == NULL) {
-    return -1;
-  }
 
   Serial.print("Entering State: ");
   Serial.println(state_list[current_state]->get_name());
@@ -79,4 +79,11 @@ int StateManager::update()
     }
     resetButtonStates();
     return 0;
+}
+const char* StateManager::get_state_name(watch_state_t state)
+{
+  if (state_list[state] == NULL) {
+      return NULL;
+  }
+  return state_list[state]->get_name();
 }

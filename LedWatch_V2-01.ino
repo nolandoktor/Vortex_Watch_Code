@@ -26,6 +26,9 @@ DoubleBuffer *lBuffer;
 StateManager state_manager;
 SleepState *sleep_state = NULL;
 AwakeState *awake_state = NULL;
+SetHourState *set_hour_state = NULL;
+SetMinuteState *set_minute_state = NULL;
+BatteryState *battery_state = NULL;
 
 LiFuelGauge *gauge;
 double battery_threshold = 28;
@@ -122,9 +125,15 @@ void setup() {
 
   sleep_state = new SleepState(&state_manager, lBuffer, &testClock, gauge);
   awake_state = new AwakeState(&state_manager, lBuffer, watchFace);
+  set_hour_state = new SetHourState(&state_manager, lBuffer, &testClock);
+  set_minute_state = new SetMinuteState(&state_manager, lBuffer, &testClock);
+  battery_state = new BatteryState(&state_manager, lBuffer, gauge);
 
   state_manager.assign_state(SLEEP_STATE, (StateElement*)sleep_state);
   state_manager.assign_state(AWAKE_STATE, (StateElement*)awake_state);
+  state_manager.assign_state(SET_HOUR_STATE, (StateElement*)set_hour_state);
+  state_manager.assign_state(SET_MIN_STATE, (StateElement*)set_minute_state);
+  state_manager.assign_state(BATTERY_LEVEL_STATE, (StateElement*)battery_state);
 
   if (state_manager.init(AWAKE_STATE) < 0) {
     Serial.println("State Manager init failed");
