@@ -6,6 +6,7 @@
 #include "../Time/TestClock.h"
 #include "../Display/DoubleBuffer.h"
 #include "../Display/WatchFace.h"
+#include "../Display/WatchFaceManager.h"
 #include "../Games/Game.h"
 
 class StateManager;
@@ -44,10 +45,10 @@ class SleepState : public StateElement {
 
 class AwakeState : public StateElement {
   private:
-    WatchFace *watchFace;
+    WatchFaceManager *watch_face_manager;
     uint32_t timeout_timer;
   public:
-    AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFace *wf);
+    AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFaceManager *wfm);
     int init();
     int on_enter(watch_state_t prev_state);
     int update();

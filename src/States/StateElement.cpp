@@ -8,6 +8,7 @@
 #include "../Time/TestClock.h"
 #include "../Display/DoubleBuffer.h"
 #include "../Display/WatchFace.h"
+#include "../Display/WatchFaceManager.h"
 #include "../Games/Game.h"
 
 StateElement::StateElement(StateManager *sm, DoubleBuffer *fb) 
@@ -110,9 +111,9 @@ int SleepState::update()
 
 //-------------------------------------------------
 
-AwakeState::AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFace *wf) : StateElement(sm, fb)
+AwakeState::AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFaceManager *wfm) : StateElement(sm, fb)
 {
-    watchFace = wf;
+    watch_face_manager = wfm;
 }
 int AwakeState::init()
 {
@@ -124,8 +125,8 @@ int AwakeState::update()
     watch_state_t next_state;
     bool state_change = false;
 
-    watchFace->update();
-    watchFace->draw(frame_buffer);
+    watch_face_manager->update();
+    watch_face_manager->draw(frame_buffer);
     frame_buffer->update();
     
     if (longPresses[up_button])

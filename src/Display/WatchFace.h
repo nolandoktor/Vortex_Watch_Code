@@ -20,9 +20,10 @@ class WatchFace
   public:
     WatchFace(volatile TestClock *inClk) {internalClock = inClk;}
 
-    virtual void reset()=0;
+    virtual int reset()=0;
     virtual void update()=0;
     virtual void draw(DoubleBuffer *lBuffer)=0;
+    virtual const char* get_name() {return "INVALID_WATCH_FACE";}
 };
 
 //-------------------------------------------------------------------------
@@ -33,10 +34,10 @@ class StandardFace : public WatchFace
 
   public:
     StandardFace(volatile TestClock *inClk) : WatchFace(inClk) {};
-    void reset() {};
+    int reset() {return 0;}
     void update() {};
     void draw(DoubleBuffer *lBuffer);
-    
+    const char* get_name() {return "STANDARD_FACE";}
 };
 
 //-------------------------------------------------------------------------
@@ -57,9 +58,10 @@ class CascadeFace : public WatchFace
     enum States{STATIC,CASCADE};
   public:
     CascadeFace(volatile TestClock *inClk);
-    void reset();
+    int reset();
     void update();
     void draw(DoubleBuffer *lBuffer);
+    const char* get_name() {return "CASCADE_FACE";}
 };
 
 //-------------------------------------------------------------------------
@@ -78,7 +80,8 @@ class FelixFace : public WatchFace
     bool getToggleState() {return (toggle_count < TOGGLE_MAX/2);}
   public:
     FelixFace(volatile TestClock *inClk);
-    void reset();
+    int reset();
     void update();
-    void draw(DoubleBuffer *lBuffer);  
+    void draw(DoubleBuffer *lBuffer);
+    const char* get_name() {return "FELIX_FACE";}  
 };

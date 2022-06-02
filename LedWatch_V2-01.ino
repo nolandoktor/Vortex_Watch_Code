@@ -5,6 +5,7 @@
 #include "src/Misc/GlobalDefines.h"
 #include "src/Time/TestClock.h"
 #include "src/Display/WatchFace.h"
+#include "src/Display/WatchFaceManager.h"
 #include "src/Input/ButtonHandler.h"
 #include "src/Games/Game.h"
 #include "src/Time/RTC_API.h"
@@ -16,8 +17,10 @@ volatile TestClock test_clock;
 DoubleBuffer *frame_buffer = NULL;
 Game *watch_game = NULL;
 LiFuelGauge *gauge = NULL;
-WatchFace *watch_face = NULL;
-WatchFace *watch_faces[NUM_WATCH_FACES] = {NULL, NULL, NULL};
+WatchFaceManager watch_face_manager;
+StandardFace *standard_face = NULL;
+CascadeFace *cascade_face = NULL;
+FelixFace *felix_face = NULL;
 
 // State Objects
 StateManager state_manager;
@@ -66,14 +69,18 @@ void setup() {
   gauge = new LiFuelGauge(MAX17043);
   frame_buffer = new DoubleBuffer();
   watch_game = new TimingGame();
-  watch_faces[WATCH_FACE_STANDARD] = new StandardFace(&test_clock);
-  watch_faces[WATCH_FACE_CASCADE] = new CascadeFace(&test_clock);
-  watch_faces[WATCH_FACE_FELIX] = new FelixFace(&test_clock);
-  watch_face = watch_faces[WATCH_FACE_CASCADE];
+  standard_face = new StandardFace(&test_clock);
+  cascade_face = new CascadeFace(&test_clock);
+  felix_face = new FelixFace(&test_clock);
+
+  // Assign Watch Faces
+  watch_face_manager.assign_face(WATCH_FACE_STANDARD, (WatchFace*)standard_face);
+  watch_face_manager.assign_face(WATCH_FACE_CASCADE, (WatchFace*)cascade_face);
+  watch_face_manager.assign_face(WATCH_FACE_FELIX, (WatchFace*)felix_face);
 
   // Instantiate States
   sleep_state = new SleepState(&state_manager, frame_buffer, &test_clock, gauge);
-  awake_state = new AwakeState(&state_manager, frame_buffer, watch_face);
+  awake_state = new AwakeState(&state_manager, frame_buffer, &watch_face_manager);
   set_hour_state = new SetHourState(&state_manager, frame_buffer, &test_clock);
   set_minute_state = new SetMinuteState(&state_manager, frame_buffer, &test_clock);
   battery_state = new BatteryState(&state_manager, frame_buffer, gauge);
@@ -98,8 +105,15 @@ void setup() {
   // Init Objects
   gauge->reset();
   watch_game->reset();
-  watch_face->reset();
   frame_buffer->reset();
+
+  // Init Watch Faces
+  if (watch_face_manager.init(WATCH_FACE_CASCADE) < 0) {
+    Serial.println("WatchFace Manager init failed");
+  }
+  else {
+    Serial.println("WatchFace Manager init successful");
+  }
 
   // Init States
   if (state_manager.init(AWAKE_STATE) < 0) {

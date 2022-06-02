@@ -9,13 +9,13 @@ StateManager::StateManager()
     for (int i=0; i<NUM_WATCH_STATES; i++) {
         state_list[i] = NULL;
     }
+    current_state = (watch_state_t)0;
 }
 int StateManager::init(watch_state_t start_state)
 {
   Serial.println("State manager init");
   bool init_success = true;
   for (int i=0; i<NUM_WATCH_STATES; i++) {
-    Serial.println(i);
     if (state_list[i] != NULL) {
       if (state_list[i]->init() < 0) {
         init_success = false;
@@ -77,8 +77,6 @@ int StateManager::update()
     if (ret < 0) {
         return ret;
     }
-    Serial.print("Auto reset inputs: ");
-    Serial.println(state_list[current_state]->get_auto_input_reset());
     if (state_list[current_state]->get_auto_input_reset()) {
         resetButtonStates();
     }

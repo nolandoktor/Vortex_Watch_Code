@@ -50,7 +50,7 @@ CascadeFace::CascadeFace(volatile TestClock *inClk) : WatchFace(inClk)
   timer_delay = 40;
   reset();
 }
-void CascadeFace::reset()
+int CascadeFace::reset()
 {
   s = internalClock->getSeconds();
   m = internalClock->getMinutes();
@@ -78,6 +78,7 @@ void CascadeFace::reset()
   //Serial.print(m);
   //Serial.print(":");
   //Serial.println(s);
+  return 0;
 }
 void CascadeFace::update()
 {
@@ -247,9 +248,10 @@ FelixFace::FelixFace(volatile TestClock *inClk) : WatchFace(inClk)
 {
   reset();
 }
-void FelixFace::reset()
+int FelixFace::reset()
 {
   toggle_count = TOGGLE_MAX;
+  return 0;
 }
 void FelixFace::update()
 {
