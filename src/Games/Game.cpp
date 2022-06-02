@@ -1,62 +1,8 @@
-#ifndef GAME_LIB
-#define GAME_LIB
-
 #include <Arduino.h>
-#include "src/Display/DoubleBuffer.h"
-#include "src/Misc/GlobalDefines.h"
-#include "LedBuffer.h"
-
-class Game
-{
-  protected:
-    volatile bool *longPresses;
-    volatile bool *shortPresses;
-    int N;
-  
-  public:
-    Game(volatile bool *lp, volatile bool *sp, int N_);
-
-    
-    virtual void reset()=0;
-    virtual void update()=0;
-    virtual void draw(DoubleBuffer *lBuffer)=0;
-    virtual bool gameIsOver()=0;
-    
-};
-
-Game::Game(volatile bool *lp, volatile bool *sp, int N_)
-{
-  longPresses = lp;
-  shortPresses = sp;
-  N = N_;
-}
-
-//---------------------------------------------
-
-class TG_Node
-{
-  private:
-    int pos;
-    int dir;
-    int type;
-    bool ranOff;
-    bool active;
-    
-  public:
-    enum TYPES{NORMAL, UP, DOWN, NO_HIT, NUM_TYPES};
-    enum DIRECTIONS{CW, CCW, NUM_DIRECTIONS};
-
-    TG_Node();
-    TG_Node(int pos_, int dir_, int type_);
-    void update();
-    void draw(DoubleBuffer *lBuffer);
-    
-    int getPos() {return pos;}
-    int getType() {return type;}
-    bool getRanOff() {return ranOff;}
-    void setActive(bool active_) {active = active_;}
-    bool isActive() {return active;}
-};
+#include "../Display/DoubleBuffer.h"
+#include "../Input/ButtonHandler.h"
+#include "../Misc/GlobalDefines.h"
+#include "Game.h"
 
 TG_Node::TG_Node()
 {
@@ -131,63 +77,7 @@ void TG_Node::draw(DoubleBuffer *lBuffer)
   }
 }
 
-
-class TimingGame : public Game
-{
-  private:
-    long update_timer;
-    int pos;
-    int score;
-    int lives;
-    int goodFlash;
-    int badFlash;
-    int spawnTimer;
-    int spawnSpread;
-    int spawnOffset;
-    
-    int state;
-    bool gameOver;
-    bool endGame;
-    int tally;
-    int ridx, gidx, bidx;
-    int typeCounters[TG_Node::NUM_TYPES];
-    int difficulty;
-    int level_speed;
-
-    const double BREATH_MIN = 0.5;
-    double breath_val;
-    int breath_dir;
-
-    const static int NUM_NODES = 6;
-    TG_Node nodes[NUM_NODES];
-    
-    const static int FLASH_VAL = COLOR_RES;
-    const static int FLASH_FALLOFF = COLOR_RES/10;
-    const static int TUTORIAL_VAL = 1;
-    const static int MAX_LEVEL_SPEED = 150;
-    
-    const static int LEVEL_SPEED_DELTA = 3;
-    enum STATES{INTRO, GAMEPLAY, END, NUM_STATES};
-    enum DIFFICULTY{EASY, MEDIUM, HARD, NUM_DIFFICULTIES};
-    const int INITIAL_LEVEL_SPEEDS[NUM_DIFFICULTIES] = {350, 325, 275};
-    const int SCORE_DIFFICULTY_TRIGGERS[NUM_DIFFICULTIES] = {12, 36, -1};
-  public:
-    TimingGame(volatile bool *lp, volatile bool *sp, int N_);
-    void reset();
-    void update();
-    void draw(DoubleBuffer *lBuffer);
-    bool gameIsOver() {return endGame;}
-
-
-    void intro();
-    void gameplay();
-    void end();
-
-    void spawnNode(int pos, int dir, int type);
-    void goodTrigger(bool real=true);
-    void badTrigger(bool real=true);
-};
-TimingGame::TimingGame(volatile bool *lp, volatile bool *sp, int N_) : Game(lp, sp, N_)
+TimingGame::TimingGame()
 {
   reset();
 }
@@ -231,6 +121,7 @@ void TimingGame::update()
 {
   if (longPresses[up_button] || longPresses[down_button])
   {
+    Serial.println("Manual exit");
     resetButtonStates();
     endGame = true;
     return;
@@ -239,16 +130,19 @@ void TimingGame::update()
   {
     case INTRO:
     {
+      Serial.println("Game Intro");
       intro();
       break;
     }
     case GAMEPLAY:
     {
+      Serial.println("Gameplay");
       gameplay();
       break;
     }
     case END:
     {
+      Serial.println("Game End");
       end();
       break;
     }
@@ -270,11 +164,11 @@ void TimingGame::draw(DoubleBuffer *lBuffer)
       {
         if (goodFlash)
         {
-          lBuffer->setColorVal(i, LedBuffer::GREEN, goodFlash);  
+          lBuffer->setColorVal(i, DoubleBuffer::G, goodFlash);  
         }
         if (badFlash)
         {
-          lBuffer->setColorVal(i, LedBuffer::RED, badFlash);
+          lBuffer->setColorVal(i, DoubleBuffer::R, badFlash);
         }
       }
     
@@ -288,15 +182,15 @@ void TimingGame::draw(DoubleBuffer *lBuffer)
     {
       for (int i=0; i<ridx; i++)
       {
-        lBuffer->setColorVal(i, LedBuffer::RED, (int)(COLOR_RES*breath_val));
+        lBuffer->setColorVal(i, DoubleBuffer::R, (int)(COLOR_RES*breath_val));
       }
       for (int i=0; i<gidx; i++)
       {
-        lBuffer->setColorVal(i, LedBuffer::GREEN, (int)(COLOR_RES*breath_val));
+        lBuffer->setColorVal(i, DoubleBuffer::G, (int)(COLOR_RES*breath_val));
       }
       for (int i=0; i<bidx; i++)
       {
-        lBuffer->setColorVal(i, LedBuffer::BLUE, (int)(COLOR_RES*breath_val));
+        lBuffer->setColorVal(i, DoubleBuffer::B, (int)(COLOR_RES*breath_val));
       }
       break;
     }
@@ -698,5 +592,3 @@ void TimingGame::badTrigger(bool real)
     }
   }
 }
-
-#endif

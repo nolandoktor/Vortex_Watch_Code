@@ -6,6 +6,7 @@
 #include "../Time/TestClock.h"
 #include "../Display/DoubleBuffer.h"
 #include "../Display/WatchFace.h"
+#include "../Games/Game.h"
 
 class StateManager;
 class StateElement {
@@ -13,6 +14,7 @@ class StateElement {
     static const int SLEEP_TIMEOUT = 150000;
     StateManager *state_manager;
     DoubleBuffer *frame_buffer;
+    bool auto_input_reset;
     virtual int change_state(watch_state_t next_state, bool state_change);
 
   public:
@@ -21,7 +23,8 @@ class StateElement {
     virtual int on_enter(watch_state_t prev_state) {return 0;}
     virtual int on_exit(watch_state_t next_state) {return 0;}
     virtual int update() {return 0;}
-    virtual const char* get_name() {return "INVALID_STATE";} 
+    virtual const char* get_name() {return "INVALID_STATE";}
+    virtual bool get_auto_input_reset() {return auto_input_reset;}
     
 };
 
@@ -103,4 +106,16 @@ class BatteryState : public StateElement {
     int on_enter(watch_state_t prev_state);
     int update();
     const char* get_name() {return "BATTERY_STATE";} 
+};
+
+class TimingGameState : public StateElement {
+  private:
+    Game *watch_game;
+    uint32_t timeout_timer; 
+  public:
+    TimingGameState(StateManager *sm, DoubleBuffer *fb, Game *game);
+    int init();
+    int on_enter(watch_state_t prev_state);
+    int update();
+    const char* get_name() {return "TIMING_GAME_STATE";} 
 };

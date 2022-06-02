@@ -77,7 +77,11 @@ int StateManager::update()
     if (ret < 0) {
         return ret;
     }
-    resetButtonStates();
+    Serial.print("Auto reset inputs: ");
+    Serial.println(state_list[current_state]->get_auto_input_reset());
+    if (state_list[current_state]->get_auto_input_reset()) {
+        resetButtonStates();
+    }
     return 0;
 }
 const char* StateManager::get_state_name(watch_state_t state)

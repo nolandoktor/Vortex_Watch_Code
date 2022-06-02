@@ -7,7 +7,7 @@
 #include "src/Time/TestClock.h"
 #include "src/Display/WatchFace.h"
 #include "src/Input/ButtonHandler.h"
-#include "Game.h"
+#include "src/Games/Game.h"
 #include "src/Time/RTC_API.h"
 #include <ArduinoLowPower.h>
 #include "src/States/StateElement.h"
@@ -29,6 +29,7 @@ AwakeState *awake_state = NULL;
 SetHourState *set_hour_state = NULL;
 SetMinuteState *set_minute_state = NULL;
 BatteryState *battery_state = NULL;
+TimingGameState *timing_game_state = NULL;
 
 LiFuelGauge *gauge;
 double battery_threshold = 28;
@@ -121,19 +122,21 @@ void setup() {
   watchFace = new CascadeFace(&testClock);
   //watchFace = new FelixFace(&testClock);
   
-  watchGame = new TimingGame(longPresses, shortPresses, 2);
+  watchGame = new TimingGame();
 
   sleep_state = new SleepState(&state_manager, lBuffer, &testClock, gauge);
   awake_state = new AwakeState(&state_manager, lBuffer, watchFace);
   set_hour_state = new SetHourState(&state_manager, lBuffer, &testClock);
   set_minute_state = new SetMinuteState(&state_manager, lBuffer, &testClock);
   battery_state = new BatteryState(&state_manager, lBuffer, gauge);
+  timing_game_state = new TimingGameState(&state_manager, lBuffer, watchGame);
 
   state_manager.assign_state(SLEEP_STATE, (StateElement*)sleep_state);
   state_manager.assign_state(AWAKE_STATE, (StateElement*)awake_state);
   state_manager.assign_state(SET_HOUR_STATE, (StateElement*)set_hour_state);
   state_manager.assign_state(SET_MIN_STATE, (StateElement*)set_minute_state);
   state_manager.assign_state(BATTERY_LEVEL_STATE, (StateElement*)battery_state);
+  state_manager.assign_state(TIMING_GAME_STATE, (StateElement*)timing_game_state);
 
   if (state_manager.init(AWAKE_STATE) < 0) {
     Serial.println("State Manager init failed");
@@ -742,13 +745,13 @@ void loop()
           int j = N_LEDS - i - 1;
           if (chargeLevel < warning_thresh)
           {
-            lBuffer->setColorVal(i, LedBuffer::RED, (int)(intensity*warning_flash));
-            lBuffer->setColorVal(j, LedBuffer::GREEN, (int)(intensity*warning_flash));
+            lBuffer->setColorVal(i, DoubleBuffer::R, (int)(intensity*warning_flash));
+            lBuffer->setColorVal(j, DoubleBuffer::G, (int)(intensity*warning_flash));
           }
           else
           {
-            lBuffer->setColorVal(i, LedBuffer::RED, intensity);
-            lBuffer->setColorVal(j, LedBuffer::GREEN, intensity);
+            lBuffer->setColorVal(i, DoubleBuffer::R, intensity);
+            lBuffer->setColorVal(j, DoubleBuffer::G, intensity);
           }
           intensity -= COLOR_RES/8; //1;
           if (intensity < 0)

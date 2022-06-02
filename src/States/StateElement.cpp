@@ -8,11 +8,13 @@
 #include "../Time/TestClock.h"
 #include "../Display/DoubleBuffer.h"
 #include "../Display/WatchFace.h"
+#include "../Games/Game.h"
 
 StateElement::StateElement(StateManager *sm, DoubleBuffer *fb) 
 {
     state_manager = sm;
     frame_buffer = fb;
+    auto_input_reset = true;
 }
 int StateElement::change_state(watch_state_t next_state, bool state_change)
 {
@@ -40,6 +42,7 @@ SleepState::SleepState(StateManager *sm, DoubleBuffer *fb,  volatile TestClock *
 int SleepState::init()
 {
     sleep_request = false;
+    return 0;
 }
 int SleepState::on_enter(watch_state_t prev_state)
 {   
@@ -114,6 +117,7 @@ AwakeState::AwakeState(StateManager *sm, DoubleBuffer *fb, WatchFace *wf) : Stat
 int AwakeState::init()
 {
     timeout_timer = 0;
+    return 0;
 }
 int AwakeState::update()
 {
@@ -178,6 +182,7 @@ int SetHourState::init()
     hour = 0;
     flash_cnt = 0;
     flash_period = DEFAULT_FLASH_PERIOD;
+    return 0;
 }
 int SetHourState::update()
 {
@@ -258,6 +263,7 @@ int SetMinuteState::init()
     minute = 0;
     flash_cnt = 0;
     flash_period = DEFAULT_FLASH_PERIOD;
+    return 0;
 }
 int SetMinuteState::update()
 {
@@ -361,6 +367,7 @@ int BatteryState::init()
     charge_level = 0;
     warning_flash = 1.0;
     warning_dir = -1;
+    return 0;
 }
 int BatteryState::update()
 {
@@ -438,5 +445,58 @@ int BatteryState::on_enter(watch_state_t prev_state)
 {
     timeout_timer = millis();
     charge_level = fuel_gauge->getSOC();
+    return 0;
+}
+
+//----------------------------------------------------------
+
+TimingGameState::TimingGameState(StateManager *sm, DoubleBuffer *fb, Game *game) : StateElement(sm, fb)
+{
+    watch_game = game;
+    auto_input_reset = false;
+}
+int TimingGameState::init()
+{
+    timeout_timer = 0;
+    if (watch_game == NULL) {
+        return -1;
+    }
+    watch_game->reset();
+    return 0;
+}
+int TimingGameState::update()
+{
+    watch_state_t next_state;
+    bool state_change = false;
+
+    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+        timeout_timer = millis();
+    }
+
+    watch_game->update();
+    watch_game->draw(frame_buffer);
+
+    if (watch_game->gameIsOver()) {
+        Serial.println("GAME OVER");
+        next_state = AWAKE_STATE;
+        state_change = true;
+    }
+    else if ((millis() - timeout_timer) >= SLEEP_TIMEOUT)
+    {
+        next_state = SLEEP_STATE;
+        state_change = true;
+    }
+
+    change_state(next_state, state_change);
+    return 0;
+}
+int TimingGameState::on_enter(watch_state_t prev_state)
+{
+    timeout_timer = millis();
+    if (watch_game == NULL) {
+        return -1;
+    }
+    resetButtonStates();
+    watch_game->reset();
     return 0;
 }
