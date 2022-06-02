@@ -5,6 +5,12 @@
 #include "../Time/TestClock.h"
 #include "../Misc/GlobalDefines.h"
 
+typedef enum {
+  WATCH_FACE_STANDARD, 
+  WATCH_FACE_CASCADE, 
+  WATCH_FACE_FELIX, 
+  NUM_WATCH_FACES
+} watch_face_t;
 
 class WatchFace
 {

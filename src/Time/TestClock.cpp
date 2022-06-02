@@ -63,8 +63,6 @@ void TestClock::update() volatile
   {
     h = 0;
   }
-  Serial.print("Clock tick: ");
-  Serial.println(millis());
 }
 void TestClock::printClock() volatile
 {
