@@ -30,6 +30,8 @@ SetHourState *set_hour_state = NULL;
 SetMinuteState *set_minute_state = NULL;
 BatteryState *battery_state = NULL;
 TimingGameState *timing_game_state = NULL;
+FaceSelectState *face_select_state = NULL;
+FlashLightState *flash_light_state = NULL;
 
 //Global Variables
 volatile bool tick_ready = false;
@@ -85,6 +87,8 @@ void setup() {
   set_minute_state = new SetMinuteState(&state_manager, frame_buffer, &test_clock);
   battery_state = new BatteryState(&state_manager, frame_buffer, gauge);
   timing_game_state = new TimingGameState(&state_manager, frame_buffer, watch_game);
+  face_select_state = new FaceSelectState(&state_manager, frame_buffer, &watch_face_manager);
+  flash_light_state = new FlashLightState(&state_manager, frame_buffer);
 
   // Assign States to state manager
   state_manager.assign_state(SLEEP_STATE, (StateElement*)sleep_state);
@@ -93,6 +97,8 @@ void setup() {
   state_manager.assign_state(SET_MIN_STATE, (StateElement*)set_minute_state);
   state_manager.assign_state(BATTERY_LEVEL_STATE, (StateElement*)battery_state);
   state_manager.assign_state(TIMING_GAME_STATE, (StateElement*)timing_game_state);
+  state_manager.assign_state(FACE_SELECT_STATE, (StateElement*)face_select_state);
+  state_manager.assign_state(FLASH_LIGHT_STATE, (StateElement*)flash_light_state);
 
   // Init RTC
   byte sec_, min_, hour_;

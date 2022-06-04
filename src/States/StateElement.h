@@ -120,3 +120,29 @@ class TimingGameState : public StateElement {
     int update();
     const char* get_name() {return "TIMING_GAME_STATE";} 
 };
+
+class FaceSelectState : public StateElement {
+  private:
+    WatchFaceManager *watch_face_manager;
+    uint32_t timeout_timer;
+    uint16_t flash_cnt;
+    uint16_t flash_period;
+    static const uint16_t DEFAULT_FLASH_PERIOD = 50; 
+  public:
+    FaceSelectState(StateManager *sm, DoubleBuffer *fb, WatchFaceManager *wfm);
+    int init();
+    int on_enter(watch_state_t prev_state);
+    int update();
+    const char* get_name() {return "FACE_SELECT_STATE";} 
+};
+
+class FlashLightState : public StateElement {
+  private:
+    uint32_t timeout_timer;
+  public:
+    FlashLightState(StateManager *sm, DoubleBuffer *fb) : StateElement(sm, fb) {}
+    int init();
+    int on_enter(watch_state_t prev_state);
+    int update();
+    const char* get_name() {return "FLASH_LIGHT_STATE";} 
+};

@@ -168,11 +168,6 @@ int AwakeState::on_enter(watch_state_t prev_state)
 
 //-------------------------------------------------------
 
-typedef struct {
-    uint8_t hour;
-    uint8_t minute;
-} time_data_t;
-
 SetHourState::SetHourState(StateManager *sm, DoubleBuffer *fb,  volatile TestClock *tc) : StateElement(sm, fb)
 {
     clock = tc;
@@ -311,7 +306,7 @@ int SetMinuteState::update()
         minute = 60-1;
     }
     if (longPresses[up_button] || longPresses[down_button]) {
-        next_state = AWAKE_STATE;
+        next_state = FACE_SELECT_STATE;
         state_change = true;
     }
     else if ((millis() - timeout_timer) >= SLEEP_TIMEOUT)
@@ -344,16 +339,13 @@ int SetMinuteState::on_enter(watch_state_t prev_state)
 }
 int SetMinuteState::on_exit(watch_state_t next_state)
 {   
-    if (next_state == AWAKE_STATE) {
-        byte sec_, min_, hour_, weekday_, day_month_, month_, year_; 
-        int ret = rtc_get_datetime(&sec_, &min_, &hour_, &weekday_, &day_month_, &month_, &year_);
-        clock->initClock(hour, minute, 0);
-        if (ret < 0) {
-            return -1;
-        }
-        return rtc_set_datetime(0, minute, hour, (weekday_t)weekday_, day_month_, month_, year_);
+    byte sec_, min_, hour_, weekday_, day_month_, month_, year_; 
+    int ret = rtc_get_datetime(&sec_, &min_, &hour_, &weekday_, &day_month_, &month_, &year_);
+    clock->initClock(hour, minute, 0);
+    if (ret < 0) {
+        return -1;
     }
-    return 0;
+    return rtc_set_datetime(0, minute, hour, (weekday_t)weekday_, day_month_, month_, year_);
 }
 
 //----------------------------------------------------------
@@ -499,5 +491,114 @@ int TimingGameState::on_enter(watch_state_t prev_state)
     }
     resetButtonStates();
     watch_game->reset();
+    return 0;
+}
+
+//------------------------------------------------
+
+FaceSelectState::FaceSelectState(StateManager *sm, DoubleBuffer *fb,  WatchFaceManager *wfm) : StateElement(sm, fb)
+{
+    watch_face_manager = wfm;
+}
+int FaceSelectState::init()
+{
+    timeout_timer = 0;
+    flash_cnt = 0;
+    flash_period = DEFAULT_FLASH_PERIOD;
+    return 0;
+}
+int FaceSelectState::update()
+{
+    watch_state_t next_state;
+    bool state_change = false;
+
+    if (flash_cnt++ >= flash_period) {
+        flash_cnt = 0;
+    }
+    
+    frame_buffer->clear();
+    watch_face_manager->update();
+    if (flash_cnt < (flash_period / 2)) {
+        watch_face_manager->draw(frame_buffer);
+    }
+    frame_buffer->update();
+
+    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+        timeout_timer = millis();
+    }
+
+    watch_face_t current_face = watch_face_manager->get_current_face();
+    if (shortPresses[up_button]) {
+        watch_face_t next_face = (watch_face_t)((current_face + 1) % NUM_WATCH_FACES);
+        watch_face_manager->change_face(next_face);
+    }
+    else if (shortPresses[down_button]) {
+        watch_face_t next_face;
+        if ((int)current_face > 0) {
+            next_face = (watch_face_t)(current_face - 1);
+        }
+        else {
+            next_face = (watch_face_t)(NUM_WATCH_FACES - 1);
+        }
+        watch_face_manager->change_face(next_face);
+    }
+    if (longPresses[up_button] || longPresses[down_button]) {
+        next_state = AWAKE_STATE;
+        state_change = true;
+    }
+    else if ((millis() - timeout_timer) >= SLEEP_TIMEOUT)
+    {
+        next_state = SLEEP_STATE;
+        state_change = true;
+    }
+
+    change_state(next_state, state_change);    
+    return 0;
+}
+int FaceSelectState::on_enter(watch_state_t prev_state)
+{
+    timeout_timer = millis();
+    flash_cnt = 0;
+    return 0;
+}
+
+//------------------------------------------------
+
+int FlashLightState::init()
+{
+    timeout_timer = 0;
+    return 0;
+}
+int FlashLightState::update()
+{
+    watch_state_t next_state;
+    bool state_change = false;
+    
+    frame_buffer->clear();
+    for (int i=0; i<N_LEDS; i++) {
+        frame_buffer->setColorVal(i, COLOR_RES, COLOR_RES, COLOR_RES);
+    }
+    frame_buffer->update();
+
+    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+        timeout_timer = millis();
+    }
+
+    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+        next_state = AWAKE_STATE;
+        state_change = true;
+    }
+    else if ((millis() - timeout_timer) >= SLEEP_TIMEOUT)
+    {
+        next_state = SLEEP_STATE;
+        state_change = true;
+    }
+
+    change_state(next_state, state_change);    
+    return 0;
+}
+int FlashLightState::on_enter(watch_state_t prev_state)
+{
+    timeout_timer = millis();
     return 0;
 }
