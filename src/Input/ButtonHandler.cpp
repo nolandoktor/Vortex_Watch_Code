@@ -46,7 +46,7 @@ static void button_function(int idx)
 {
   int pin_status = digitalRead(intPins[idx]);
   uint32_t event_ts = millis();
-  if (pin_status == 0) {
+  if (pin_status == 1) {
     Serial.print("Button ");
     Serial.print(intPins[idx]);
     Serial.println(" pressed");

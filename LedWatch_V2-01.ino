@@ -59,6 +59,7 @@ void setup() {
   delay(4000);
   Serial.println("Exiting bootloader...");  
 
+
   // GPIO Config - Pin Direction  
   pinMode(DEBUG_LED_PIN, OUTPUT);
   pinMode(LED_MOSFET_EN_PIN, OUTPUT);
