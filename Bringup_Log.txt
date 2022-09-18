@@ -1,0 +1,14 @@
+Vortex Watch v6 Hardware Bringup
+-------------------------------
+
+9/18/2022:
+- Batt test pin doesn't seem to be connected to analog input pin. Unclear if can measure battery level this way. [FAIL]
+- Fuel gauge doesn't seem to be responding over I2C, needs further investigation. [TBD]
+
+9/17/2022:
+- Noticed that 1HZ clock from RTC wasn't getting output. Turns out it was being gated by CLKOE pin, needed to set pin to output HIGH in code. [SUCCESS]
+- Even after getting 1HZ to output, I wasn't seeing the clock tick as expected. Needed to adjust pin mappings for 1HZ clock interrupt pin. [SUCCESS]
+- Verified I2C access to RTC and Accelerometer [SUCCESS]
+- Verified control of debug LED [SUCCESS]
+- Verified control of RGB LEDs [SUCCESS]
+- Tried testing touch sensing useing Freetouch library, but not getting output expected. Needs further investigation. [TBD]
