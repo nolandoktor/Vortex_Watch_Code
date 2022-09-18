@@ -15,6 +15,7 @@ void cliTask(void *pvParameters);
 static BaseType_t echoCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t i2c_write_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t i2c_bus_scan_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_read_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_write_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
@@ -40,6 +41,12 @@ static const CLI_Command_Definition_t i2c_read_byte_CommandStruct =
         "i2c_read_byte <device_addr> <reg_addr>:\r\n Reads byte from specified device and address\r\n\r\n",
         i2c_read_byte_cmd,
         2};
+static const CLI_Command_Definition_t i2c_bus_scan_CommandStruct =
+    {
+        "i2c_bus_scan",
+        "i2c_bus_scan:\r\n Scans I2C bus and returns list of device addresses present on bus\r\n\r\n",
+        i2c_bus_scan_cmd,
+        0};
 static const CLI_Command_Definition_t gpio_read_CommandStruct =
     {
         "gpio_read",
@@ -230,6 +237,29 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
     return pdFALSE;
 }
 
+static BaseType_t i2c_bus_scan_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    static const uint8_t MAX_DEV_ADDR_CNT = 16;
+    uint8_t dev_addr_list[MAX_DEV_ADDR_CNT];
+    uint8_t dev_addr_cnt;
+
+    if (i2c_bus_scan(dev_addr_list, &dev_addr_cnt, MAX_DEV_ADDR_CNT) < 0)
+    {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: I2C bus scan failed.\n");
+        return pdFALSE;
+    }
+
+    int idx = snprintf(pcWriteBuffer, xWriteBufferLen, "[");
+    for (int i=0; i<dev_addr_cnt-1; i++) {
+        uint8_t bytes_written = snprintf(pcWriteBuffer+idx, xWriteBufferLen-idx, "0x%02X, ", dev_addr_list[i]);
+        idx += bytes_written;
+    }
+
+    snprintf(pcWriteBuffer+idx, xWriteBufferLen-idx, "0x%02X]\n", dev_addr_list[dev_addr_cnt-1]);
+    return pdFALSE;
+}
+
 static BaseType_t gpio_read_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
 {
     (void)pcCommandString;
@@ -416,6 +446,7 @@ void cliTask(void *pvParameters)
     FreeRTOS_CLIRegisterCommand(&echoCommandStruct);
     FreeRTOS_CLIRegisterCommand(&i2c_write_byte_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&i2c_read_byte_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&i2c_bus_scan_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&gpio_read_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&gpio_write_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&gpio_dir_CommandStruct);

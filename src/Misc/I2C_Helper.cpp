@@ -41,3 +41,25 @@ int i2c_write_byte(uint8_t dev_addr, uint8_t reg_addr, uint8_t reg_val)
     };
     return i2c_write(dev_addr, wbuf, sizeof(wbuf));
 }
+int i2c_bus_scan(uint8_t *addr_list, uint8_t *addr_cnt, uint8_t max_addr_cnt)
+{
+    int cnt = 0;
+    if (addr_list == NULL) {
+        return -1;
+    }
+    if (max_addr_cnt < 1) {
+        return -1;
+    }
+    for (uint8_t i=0; i<128; i++) {
+        if (cnt > max_addr_cnt) {
+            return -2;
+        }
+        Wire.beginTransmission(i);
+        if (Wire.endTransmission() != 0) {
+            continue;
+        }
+        addr_list[cnt++] = i;
+    }
+    *addr_cnt = cnt;
+    return 0;
+}
