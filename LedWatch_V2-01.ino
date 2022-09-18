@@ -69,9 +69,11 @@ void setup() {
   pinMode(DEBUG_LED_PIN, OUTPUT);
   pinMode(LED_MOSFET_EN_PIN, OUTPUT);
   pinMode(CLK_1HZ_PIN, INPUT_PULLUP);
+  pinMode(CLK_OE_PIN, OUTPUT);
 
   // GPIO Config - Output
   digitalWrite(LED_MOSFET_EN_PIN, HIGH);
+  digitalWrite(CLK_OE_PIN, HIGH);
 
   // Instantiate Objects
   gauge = new LiFuelGauge(MAX17043);
