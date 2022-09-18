@@ -15,17 +15,7 @@ void cliTask(void *pvParameters);
 static BaseType_t echoCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t i2c_write_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
-
-void init_cli_task()
-{
-    xTaskCreate(
-        cliTask,
-        (const portCHAR *)"CLI_Task", // A name just for humans
-        CLI_STACK_SIZE,               // Stack size
-        NULL,                         // No Parameters
-        3,                            // priority
-        NULL);
-}
+static int parse_integer_param(const char *param, int len, uint32_t *out);
 
 //---------------------- CLI Struct Definitions ---------------------
 static const CLI_Command_Definition_t echoCommandStruct =
@@ -97,10 +87,6 @@ static BaseType_t i2c_write_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen
     const char *reg_addr_str;
     const char *reg_val_str;
 
-    char dev_addr_buf[8] = {'\0'};
-    char reg_addr_buf[8] = {'\0'};
-    char reg_val_buf[8] = {'\0'};
-
     uint8_t dev_addr = 0;
     uint8_t reg_addr = 0;
     uint8_t reg_val = 0;
@@ -128,41 +114,31 @@ static BaseType_t i2c_write_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen
         return pdFALSE;
     }
 
-    memcpy(dev_addr_buf, dev_addr_str, p1_len);
-    memcpy(reg_addr_buf, reg_addr_str, p2_len);
-    memcpy(reg_val_buf, reg_val_str, p3_len);
+    uint32_t value;
+    if (parse_integer_param(dev_addr_str, p1_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    dev_addr = (uint8_t)value;
 
-    if (dev_addr_buf[1] == 'x')
-    {
-        dev_addr = (uint8_t)strtol(dev_addr_buf, NULL, 0);
+    if (parse_integer_param(reg_addr_str, p2_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
     }
-    else
-    {
-        dev_addr = atoi(dev_addr_buf);
+    reg_addr = (uint8_t)value;
+
+    if (parse_integer_param(reg_val_str, p3_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
     }
+    reg_val = (uint8_t)value;
+
     if (dev_addr > 127)
     {
         snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid device address (0x%02X), cannot exceed 127\n", dev_addr);
         return pdFALSE;
     }
 
-    if (reg_addr_buf[1] == 'x')
-    {
-        reg_addr = (uint8_t)strtol(reg_addr_buf, NULL, 0);
-    }
-    else
-    {
-        reg_addr = atoi(reg_addr_buf);
-    }
-
-    if (reg_val_buf[1] == 'x')
-    {
-        reg_val = (uint8_t)strtol(reg_val_buf, NULL, 0);
-    }
-    else
-    {
-        reg_val = atoi(reg_val_buf);
-    }
 
     if (i2c_write_byte(dev_addr, reg_addr, reg_val) < 0)
     {
@@ -180,8 +156,6 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
     const char *dev_addr_str;
     const char *reg_addr_str;
 
-    char dev_addr_buf[8] = {'\0'};
-    char reg_addr_buf[8] = {'\0'};
 
     uint8_t dev_addr = 0;
     uint8_t reg_addr = 0;
@@ -205,31 +179,25 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
         return pdFALSE;
     }
 
-    memcpy(dev_addr_buf, dev_addr_str, p1_len);
-    memcpy(reg_addr_buf, reg_addr_str, p2_len);
+    uint32_t value;
+    if (parse_integer_param(dev_addr_str, p1_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    dev_addr = (uint8_t)value;
 
-    if (dev_addr_buf[1] == 'x')
-    {
-        dev_addr = (uint8_t)strtol(dev_addr_buf, NULL, 0);
+    if (parse_integer_param(reg_addr_str, p2_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
     }
-    else
-    {
-        dev_addr = atoi(dev_addr_buf);
-    }
+    reg_addr = (uint8_t)value;
+
     if (dev_addr > 127)
     {
         snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid device address (0x%02X), cannot exceed 127\n", dev_addr);
         return pdFALSE;
     }
 
-    if (reg_addr_buf[1] == 'x')
-    {
-        reg_addr = (uint8_t)strtol(reg_addr_buf, NULL, 0);
-    }
-    else
-    {
-        reg_addr = atoi(reg_addr_buf);
-    }
 
     if (i2c_read_byte(dev_addr, reg_addr, &reg_val) < 0)
     {
@@ -241,7 +209,42 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
     return pdFALSE;
 }
 
+static int parse_integer_param(const char *param, int len, uint32_t *out)
+{
+    char data_buf[16] = {'\0'};
+    uint32_t value;
+    if (param == NULL) {
+        return -1;
+    }
+    if (len > 15) {
+        return -1;
+    }
+
+    memcpy(data_buf, param, len);
+
+    if (data_buf[1] == 'x')
+    {
+        value = (uint32_t)strtol(data_buf, NULL, 0);
+    }
+    else
+    {
+        value = atoi(data_buf);
+    }
+    *out = value;
+    return 0;
+}
 //---------------------- CLI Task Implementation ---------------------
+
+void init_cli_task()
+{
+    xTaskCreate(
+        cliTask,
+        (const portCHAR *)"CLI_Task", // A name just for humans
+        CLI_STACK_SIZE,               // Stack size
+        NULL,                         // No Parameters
+        3,                            // priority
+        NULL);
+}
 
 // TODO: Make dedicated Serial input thread and pass data to this thread with queue
 void cliTask(void *pvParameters)
