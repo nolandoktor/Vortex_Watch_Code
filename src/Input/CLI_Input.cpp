@@ -15,7 +15,11 @@ void cliTask(void *pvParameters);
 static BaseType_t echoCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t i2c_write_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
-static int parse_integer_param(const char *param, int len, uint32_t *out);
+static BaseType_t gpio_read_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t gpio_write_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+
+static int parse_integer_param(const char *param, int len, int32_t *out);
 
 //---------------------- CLI Struct Definitions ---------------------
 static const CLI_Command_Definition_t echoCommandStruct =
@@ -35,6 +39,24 @@ static const CLI_Command_Definition_t i2c_read_byte_CommandStruct =
         "i2c_read_byte",
         "i2c_read_byte <device_addr> <reg_addr>:\r\n Reads byte from specified device and address\r\n\r\n",
         i2c_read_byte_cmd,
+        2};
+static const CLI_Command_Definition_t gpio_read_CommandStruct =
+    {
+        "gpio_read",
+        "gpio_read <pin>:\r\n Reads state of specified GPIO pin\r\n\r\n",
+        gpio_read_cmd,
+        1};
+static const CLI_Command_Definition_t gpio_write_CommandStruct =
+    {
+        "gpio_write",
+        "gpio_write <pin> <state>:\r\n Sets state of specified GPIO pin\r\n\r\n",
+        gpio_write_cmd,
+        2};
+static const CLI_Command_Definition_t gpio_dir_CommandStruct =
+    {
+        "gpio_dir",
+        "gpio_dir <pin> <mode>:\r\n Sets direction of specified GPIO pin\r\n\r\n",
+        gpio_dir_cmd,
         2};
 
 //---------------------- CLI Function Definitions ---------------------
@@ -114,7 +136,7 @@ static BaseType_t i2c_write_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen
         return pdFALSE;
     }
 
-    uint32_t value;
+    int32_t value;
     if (parse_integer_param(dev_addr_str, p1_len, &value) < 0) {
         snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
         return pdFALSE;
@@ -156,7 +178,6 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
     const char *dev_addr_str;
     const char *reg_addr_str;
 
-
     uint8_t dev_addr = 0;
     uint8_t reg_addr = 0;
     uint8_t reg_val = 0;
@@ -179,7 +200,7 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
         return pdFALSE;
     }
 
-    uint32_t value;
+    int32_t value;
     if (parse_integer_param(dev_addr_str, p1_len, &value) < 0) {
         snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
         return pdFALSE;
@@ -209,7 +230,140 @@ static BaseType_t i2c_read_byte_cmd(char *pcWriteBuffer, size_t xWriteBufferLen,
     return pdFALSE;
 }
 
-static int parse_integer_param(const char *param, int len, uint32_t *out)
+static BaseType_t gpio_read_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *pin_str;
+    
+    uint8_t pin = 0;
+    uint8_t state;
+
+    BaseType_t p1_len;
+    pin_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+
+    if (p1_len > 2)
+    {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid pin\n");
+        return pdFALSE;
+    }
+
+    int32_t value;
+    if (parse_integer_param(pin_str, p1_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    pin = (uint8_t)value;
+    state = digitalRead(pin);
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Pin[%d] = %d\n", pin, state);
+    return pdFALSE;
+}
+
+static BaseType_t gpio_write_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *pin_str;
+    const char *val_str;
+
+    uint8_t pin = 0;
+    uint8_t val = 0;
+
+    BaseType_t p1_len, p2_len;
+    pin_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+    val_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        2,               // Return the second parameter.
+        &p2_len          // Store the parameter string length.
+    );
+
+    if (p1_len > 2 || p2_len > 1)
+    {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid inputs\n");
+        return pdFALSE;
+    }
+
+    int32_t value;
+    if (parse_integer_param(pin_str, p1_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    pin = (uint8_t)value;
+
+    if (parse_integer_param(val_str, p2_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    val = (uint8_t)value;
+
+    digitalWrite(pin, val);
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Setting pin[%d] to %d\n", pin, val);
+    return pdFALSE;
+}
+
+static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *pin_str;
+    const char *dir_str;
+
+    uint8_t pin = 0;
+    uint8_t dir = 0;
+
+    static const int DIR_MAP[3] = {INPUT, OUTPUT, INPUT_PULLUP};
+    static const char *DIR_NAMES[3] = {"INPUT", "OUTPUT", "INPUT_PULLUP"};
+
+    BaseType_t p1_len, p2_len;
+    pin_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+    dir_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        2,               // Return the second parameter.
+        &p2_len          // Store the parameter string length.
+    );
+
+    if (p1_len > 2 || p2_len > 1)
+    {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid inputs\n");
+        return pdFALSE;
+    }
+
+    int32_t value;
+    if (parse_integer_param(pin_str, p1_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    pin = (uint8_t)value;
+
+    if (parse_integer_param(dir_str, p2_len, &value) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    dir = (uint8_t)value;
+
+    if (dir < 0 || dir > 2) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid value for dir, must be between 0 and 2\n");
+        return pdFALSE;
+    }
+
+    pinMode(pin, DIR_MAP[dir]);
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Setting pin[%d] direction to %s\n", pin, DIR_NAMES[dir]);
+    return pdFALSE;
+}
+
+static int parse_integer_param(const char *param, int len, int32_t *out)
 {
     char data_buf[16] = {'\0'};
     uint32_t value;
@@ -262,6 +416,9 @@ void cliTask(void *pvParameters)
     FreeRTOS_CLIRegisterCommand(&echoCommandStruct);
     FreeRTOS_CLIRegisterCommand(&i2c_write_byte_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&i2c_read_byte_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&gpio_read_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&gpio_write_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&gpio_dir_CommandStruct);
 
     while (1)
     {
