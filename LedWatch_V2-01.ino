@@ -1,8 +1,10 @@
+#include <FreeRTOS_SAMD21.h>
 #include <LiFuelGauge.h>
 #include <ArduinoLowPower.h>
 #include "src/Display/DoubleBuffer.h"
 #include "src/Misc/PinMapping.h"
 #include "src/Misc/GlobalDefines.h"
+#include "src/Misc/Delay.h"
 #include "src/Time/TestClock.h"
 #include "src/Display/WatchFace.h"
 #include "src/Display/WatchFaceManager.h"
@@ -11,6 +13,7 @@
 #include "src/Time/RTC_API.h"
 #include "src/States/StateElement.h"
 #include "src/States/StateManager.h"
+#include "src/Input/CLI_Input.h"
 
 // Watch Objects
 volatile TestClock test_clock;
@@ -50,6 +53,8 @@ void enter_sleep_mode();
 void wake_from_sleep();
 void tickClock();
 
+void TaskWatchMain(void *pvParameters);
+void TaskBlink(void *pvParameters);
 
 void setup() {
   // Init Serial
@@ -103,10 +108,12 @@ void setup() {
 
   // Init RTC
   byte sec_, min_, hour_;
-  rtc_init();
+  if (rtc_init() < 0) {
+    Serial.println("Error: Failed to initialize RTC");
+  }
   rtc_set_datetime(second_init, minute_init, hour_init, dayOfWeek_init, 
                    dayOfMonth_init, month_init, year_init);
-  rtc_get_time (&sec_, &min_, &hour_);
+  rtc_get_time(&sec_, &min_, &hour_);
   test_clock.initClock((int)hour_, (int)min_, (int)sec_);
 
   // Init Objects
@@ -133,15 +140,70 @@ void setup() {
   // Setup button and 1Hz clock interrupts
   attachInterrupt(digitalPinToInterrupt(CLK_1HZ_PIN), tickClock, RISING);
   initButtonHandler();
+
+
+  // Create FreeRTOS Tasks
+  xTaskCreate(
+    TaskWatchMain,
+    (const portCHAR *)"Watch_Main",   // A name just for humans
+    1024,        // Stack size
+    NULL,
+    2,          // priority
+    NULL
+  );
+
+  
+  xTaskCreate(
+    TaskBlink,
+    (const portCHAR *)"Blink",   // A name just for humans
+    256,        // Stack size
+    NULL,
+    1,          // priority
+    NULL
+  );
+  
+  init_cli_task();
+
+  vTaskStartScheduler();
 }
 
 void loop() 
 {
+  /*
   state_manager.update();
   delay(MAIN_LOOP_DELAY);
+  */
 }
 
+//-------------------------------------------
 
+
+void TaskBlink(void *pvParameters) 
+{
+  (void) pvParameters;
+
+  for (;;) // A Task shall never return or exit.
+  {
+    digitalWrite(DEBUG_LED_PIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    k_msleep(1000);          // wait for one second
+    digitalWrite(DEBUG_LED_PIN, LOW);    // turn the LED off by making the voltage LOW
+    k_msleep(1000);          // wait for one second
+  }
+}
+
+void TaskWatchMain(void *pvParameters)
+{
+  (void) pvParameters;
+
+  for (;;) // A Task shall never return or exit.
+  {
+    state_manager.update();
+    k_msleep(MAIN_LOOP_DELAY);
+
+    //Serial.println("TaskWatchMain");
+    //k_msleep(1000);
+  }
+}
 
 //-------------------------------------------
 
