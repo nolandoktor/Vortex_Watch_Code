@@ -19,6 +19,12 @@ static BaseType_t i2c_bus_scan_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, 
 static BaseType_t gpio_read_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_write_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+// TODO: 32-bit register read function
+// TODO: 32-bit register write function
+// TODO: Set time
+// TODO: Get time
+// TODO: Get watch state
+// TODO: Set watch state
 
 static int parse_integer_param(const char *param, int len, int32_t *out);
 

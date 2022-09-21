@@ -14,6 +14,7 @@
 #include "src/States/StateElement.h"
 #include "src/States/StateManager.h"
 #include "src/Input/CLI_Input.h"
+#include "src/Input/TouchInput.h"
 
 // Watch Objects
 volatile TestClock test_clock;
@@ -165,6 +166,7 @@ void setup() {
   );
   
   init_cli_task();
+  init_touch_task();
 
   vTaskStartScheduler();
 }

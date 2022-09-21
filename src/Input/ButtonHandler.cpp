@@ -15,6 +15,8 @@ volatile bool shortPresses[2];
 static void button0_interrupt_handler();
 static void button1_interrupt_handler();
 
+// TODO: Cleanup button logic to more clearly divide touch IC and freetouch inputs
+
 void resetButtonStates()
 {
   for (int i=0; i<2; i++)
@@ -31,15 +33,16 @@ void enableButtonInterrupts()
 }
 void initButtonHandler()
 {
+  int num_buttons = 1;
   resetButtonStates();
-  for (int i=0; i<2; i++)
+  for (int i=0; i<num_buttons; i++)
   {
     pinMode(intPins[i], INPUT_PULLUP);
     prevStates[i] = digitalRead(intPins[i]);
   }
   //Attach interrupt handlers for pins 
   attachInterrupt(digitalPinToInterrupt(intPins[0]), button0_interrupt_handler, CHANGE);
-  LowPower.attachInterruptWakeup(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
+  //LowPower.attachInterruptWakeup(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
 }
 
 static void button_function(int idx)
