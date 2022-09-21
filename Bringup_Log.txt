@@ -1,6 +1,13 @@
 Vortex Watch v6 Hardware Bringup
 -------------------------------
 
+9/20/2022:
+- 2nd touch pin not connected to analog pin as defined by Arduino, but it does connect to an ADC/PTC channel (AIN[17]/X[1]). Need to investigate to see 
+  if can use Freetouch library with this pin.
+    - Pin PA09 doesn't seem seem to be compatible with the FreeTouch library. From what I can tell, it needs to be a "Y" PTC pin, not an "X", which means
+      it must be 1 of the following pins [PA02, PA03, PA04, PA05, PA06, PA07, PB02, PB03, PB08, PB09]. 
+    - To get it working I depopped the AREF cap and added a fly wire from PA03(newly exposed pad) to the touch connection
+
 9/18/2022:
 - Batt test pin doesn't seem to be connected to analog input pin. Unclear if can measure battery level this way. [FAIL]
 - Fuel gauge doesn't seem to be responding over I2C, needs further investigation. [TBD]
