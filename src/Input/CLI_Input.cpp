@@ -9,6 +9,8 @@
 #define CLI_MAX_OUTPUT_LENGTH 256
 #define CLI_MAX_INPUT_LENGTH 256
 
+TaskHandle_t xCLITask = NULL;
+
 void cliTask(void *pvParameters);
 
 //---------------------- CLI Function Prototypes ---------------------
@@ -433,7 +435,7 @@ void init_cli_task()
         CLI_STACK_SIZE,               // Stack size
         NULL,                         // No Parameters
         3,                            // priority
-        NULL);
+        &xCLITask);
 }
 
 // TODO: Make dedicated Serial input thread and pass data to this thread with queue

@@ -15,6 +15,8 @@ typedef enum
     NUM_TOUCH_PADS
 } touch_pad_t;
 
+TaskHandle_t xTouchTask = NULL;
+
 static Adafruit_FreeTouch_alt qt[NUM_TOUCH_PADS] = {
     Adafruit_FreeTouch_alt(PORTA, 3, OVERSAMPLE_4, RESISTOR_50K, FREQ_MODE_NONE),
     // TODO: Add another definition for switch 1
@@ -33,7 +35,7 @@ void init_touch_task()
         TOUCH_STACK_SIZE,               // Stack size
         NULL,                           // No Parameters
         1,                              // priority
-        NULL);
+        &xTouchTask);
 }
 
 static void touchTask(void *pvParameters)

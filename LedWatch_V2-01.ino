@@ -16,6 +16,9 @@
 #include "src/Input/CLI_Input.h"
 #include "src/Input/TouchInput.h"
 
+#define MAIN_TASK_STACK_SIZE 2*configMINIMAL_STACK_SIZE
+#define BLINK_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+
 // Watch Objects
 volatile TestClock test_clock;
 DoubleBuffer *frame_buffer = NULL;
@@ -46,6 +49,12 @@ static const weekday_t dayOfWeek_init = RTC_THURSDAY;
 static const byte dayOfMonth_init = 2;
 static const byte month_init = 6;
 static const byte year_init = 22;
+
+//Created Tasks
+TaskHandle_t xMainTask = NULL;
+TaskHandle_t xBlinkTask = NULL;
+extern TaskHandle_t xCLITask;
+extern TaskHandle_t xTouchTask;
 
 // Function Prototypes
 void goToSleep();
@@ -149,25 +158,25 @@ void setup() {
   xTaskCreate(
     TaskWatchMain,
     (const portCHAR *)"Watch_Main",   // A name just for humans
-    1024,        // Stack size
+    MAIN_TASK_STACK_SIZE,        // Stack size
     NULL,
     2,          // priority
-    NULL
+    &xMainTask
   );
 
   
   xTaskCreate(
     TaskBlink,
     (const portCHAR *)"Blink",   // A name just for humans
-    256,        // Stack size
+    BLINK_TASK_STACK_SIZE,        // Stack size
     NULL,
     1,          // priority
-    NULL
+    &xBlinkTask
   );
   
   init_cli_task();
   init_touch_task();
-
+  
   vTaskStartScheduler();
 }
 
@@ -181,7 +190,6 @@ void loop()
 
 //-------------------------------------------
 
-
 void TaskBlink(void *pvParameters) 
 {
   (void) pvParameters;
@@ -192,6 +200,21 @@ void TaskBlink(void *pvParameters)
     k_msleep(1000);          // wait for one second
     digitalWrite(DEBUG_LED_PIN, LOW);    // turn the LED off by making the voltage LOW
     k_msleep(1000);          // wait for one second
+
+    UBaseType_t wm_blink = uxTaskGetStackHighWaterMark(xBlinkTask);
+    UBaseType_t wm_main = uxTaskGetStackHighWaterMark(xMainTask);
+    UBaseType_t wm_cli = uxTaskGetStackHighWaterMark(xCLITask);
+    UBaseType_t wm_touch = uxTaskGetStackHighWaterMark(xTouchTask);
+
+    Serial.print("Main: ");
+    Serial.println(wm_main);
+    Serial.print("Blink: ");
+    Serial.println(wm_blink);
+    Serial.print("CLI: ");
+    Serial.println(wm_cli);
+    Serial.print("Touch: ");
+    Serial.println(wm_touch);
+    Serial.println();
   }
 }
 
