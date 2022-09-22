@@ -15,6 +15,7 @@
 #include "src/States/StateManager.h"
 #include "src/Input/CLI_Input.h"
 #include "src/Input/TouchInput.h"
+#include "src/Sensor/Accel_ADXL345.h"
 
 #define MAIN_TASK_STACK_SIZE 2*configMINIMAL_STACK_SIZE
 #define BLINK_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
@@ -55,6 +56,7 @@ TaskHandle_t xMainTask = NULL;
 TaskHandle_t xBlinkTask = NULL;
 extern TaskHandle_t xCLITask;
 extern TaskHandle_t xTouchTask;
+extern TaskHandle_t xAccelTask;
 
 // Function Prototypes
 void goToSleep();
@@ -176,6 +178,7 @@ void setup() {
   
   init_cli_task();
   init_touch_task();
+  init_accel_task();
   
   vTaskStartScheduler();
 }
@@ -205,6 +208,7 @@ void TaskBlink(void *pvParameters)
     UBaseType_t wm_main = uxTaskGetStackHighWaterMark(xMainTask);
     UBaseType_t wm_cli = uxTaskGetStackHighWaterMark(xCLITask);
     UBaseType_t wm_touch = uxTaskGetStackHighWaterMark(xTouchTask);
+    UBaseType_t wm_accel = uxTaskGetStackHighWaterMark(xAccelTask);
 
     Serial.print("Main: ");
     Serial.println(wm_main);
@@ -214,6 +218,8 @@ void TaskBlink(void *pvParameters)
     Serial.println(wm_cli);
     Serial.print("Touch: ");
     Serial.println(wm_touch);
+    Serial.print("Accel: ");
+    Serial.println(wm_accel);
     Serial.println();
   }
 }

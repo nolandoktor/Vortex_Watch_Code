@@ -27,6 +27,9 @@ static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 // TODO: Get time
 // TODO: Get watch state
 // TODO: Set watch state
+// TODO: Print stack usage
+// TODO: Set accel ODR
+// TODO: Enable/Disable datastream
 
 static int parse_integer_param(const char *param, int len, int32_t *out);
 

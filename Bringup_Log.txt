@@ -1,5 +1,9 @@
 Vortex Watch v6 Hardware Bringup
 -------------------------------
+9/21/2022:
+- Integrated touch pad handling with Freetouch library into watch code and verified that it's working as expected
+- Verified that DRDY interrupt works as expected by setting up accelerometer datastreaming
+- Noticing quite a lot of noise on accelerometer datastream. Need to investigate whether this is a driver issue or with the sensor
 
 9/20/2022:
 - 2nd touch pin not connected to analog pin as defined by Arduino, but it does connect to an ADC/PTC channel (AIN[17]/X[1]). Need to investigate to see 
@@ -12,6 +16,7 @@ Vortex Watch v6 Hardware Bringup
 - Batt test pin doesn't seem to be connected to analog input pin. Unclear if can measure battery level this way. [FAIL]
 - Fuel gauge doesn't seem to be responding over I2C, needs further investigation. [TBD]
     - Fuel gauge is responding to 0x76 for some reason. Check with Nolan where the ICs were purchased from.
+        - Purchased from Ebay, other people online have had issues with these from ebay. Likey a knockoff chip.
     - While gauge is responding, the cell voltage and RSOC readings don't make sense. Will attempt to do quick restart command to see if that helps.
         - Quick restart command did not seem to help
 
