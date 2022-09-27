@@ -4,12 +4,18 @@
 #include "../FreeRTOS_Plus/FreeRTOS_CLI.h"
 #include "../Misc/Delay.h"
 #include "../Misc/I2C_Helper.h"
+#include "../Sensor/Accel_ADXL345.h"
 
 #define CLI_STACK_SIZE 1024
 #define CLI_MAX_OUTPUT_LENGTH 256
 #define CLI_MAX_INPUT_LENGTH 256
 
 TaskHandle_t xCLITask = NULL;
+
+extern TaskHandle_t xMainTask;
+extern TaskHandle_t xBlinkTask;
+extern TaskHandle_t xTouchTask;
+extern TaskHandle_t xAccelTask;
 
 void cliTask(void *pvParameters);
 
@@ -21,6 +27,10 @@ static BaseType_t i2c_bus_scan_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, 
 static BaseType_t gpio_read_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_write_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t set_tap_thresh_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t get_tap_thresh_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t set_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t get_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 // TODO: 32-bit register read function
 // TODO: 32-bit register write function
 // TODO: Set time
@@ -32,6 +42,7 @@ static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 // TODO: Enable/Disable datastream
 
 static int parse_integer_param(const char *param, int len, int32_t *out);
+static int parse_float_param(const char *param, int len, float *out);
 
 //---------------------- CLI Struct Definitions ---------------------
 static const CLI_Command_Definition_t echoCommandStruct =
@@ -76,6 +87,30 @@ static const CLI_Command_Definition_t gpio_dir_CommandStruct =
         "gpio_dir <pin> <mode>:\r\n Sets direction of specified GPIO pin\r\n\r\n",
         gpio_dir_cmd,
         2};
+static const CLI_Command_Definition_t set_tap_thresh_CommandStruct =
+    {
+        "set_tap_thresh",
+        "set_tap_thresh <threshold (mg)>:\r\n Sets required acceleration threshold for tap event\r\n\r\n",
+        set_tap_thresh_cmd,
+        1};
+static const CLI_Command_Definition_t get_tap_thresh_CommandStruct =
+    {
+        "get_tap_thresh",
+        "get_tap_thresh:\r\n Gets required acceleration threshold for tap event\r\n\r\n",
+        get_tap_thresh_cmd,
+        0};
+static const CLI_Command_Definition_t set_tap_duration_CommandStruct =
+    {
+        "set_tap_duration",
+        "set_tap_duration <duration (ms)>:\r\n Sets maximum time duration for tap event\r\n\r\n",
+        set_tap_duration_cmd,
+        1};
+static const CLI_Command_Definition_t get_tap_duration_CommandStruct =
+    {
+        "get_tap_duration",
+        "get_tap_duration:\r\n Gets required time maximum for tap event\r\n\r\n",
+        get_tap_duration_cmd,
+        0};
 
 //---------------------- CLI Function Definitions ---------------------
 static BaseType_t echoCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
@@ -404,6 +439,89 @@ static BaseType_t gpio_dir_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, cons
     return pdFALSE;
 }
 
+static BaseType_t set_tap_thresh_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *thresh_str;
+    
+    float thresh;
+
+    BaseType_t p1_len;
+    thresh_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+
+    if (parse_float_param(thresh_str, p1_len, &thresh) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    
+    if (accel_set_tap_thresh(thresh) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed set tap threshold\n");
+        return pdFALSE;
+    }
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Tap threshold set to %.02f mg\n", thresh);
+    return pdFALSE;
+}
+static BaseType_t get_tap_thresh_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    
+    float thresh;
+    
+    if (accel_get_tap_thresh(&thresh) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed get tap threshold\n");
+        return pdFALSE;
+    }
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Tap threshold = %.02f mg\n", thresh);
+    return pdFALSE;
+}
+static BaseType_t set_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *duration_str;
+    
+    int32_t duration;
+
+    BaseType_t p1_len;
+    duration_str = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+
+    if (parse_integer_param(duration_str, p1_len, &duration) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+    
+    if (accel_set_tap_duration((uint16_t)duration) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed set tap duration\n");
+        return pdFALSE;
+    }
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Tap duration set to %d ms\n", (uint16_t)duration);
+    return pdFALSE;
+}
+static BaseType_t get_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    
+    uint16_t duration;
+    
+    if (accel_get_tap_duration(&duration) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed get tap duration\n");
+        return pdFALSE;
+    }
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Tap duration = %d ms\n", duration);
+    return pdFALSE;
+}
+
 static int parse_integer_param(const char *param, int len, int32_t *out)
 {
     char data_buf[16] = {'\0'};
@@ -425,6 +543,32 @@ static int parse_integer_param(const char *param, int len, int32_t *out)
     {
         value = atoi(data_buf);
     }
+    *out = value;
+    return 0;
+}
+static int parse_float_param(const char *param, int len, float *out)
+{
+    char data_buf[16] = {'\0'};
+    float value;
+    if (param == NULL) {
+        return -1;
+    }
+    if (len > 15) {
+        return -1;
+    }
+
+    memcpy(data_buf, param, len);
+
+    if (data_buf[1] == 'x')
+    {
+        value = (uint32_t)strtol(data_buf, NULL, 0);
+    }
+    else
+    {
+        value = atoi(data_buf);
+    }
+    sscanf(data_buf, "%f", &value);
+
     *out = value;
     return 0;
 }
@@ -461,6 +605,10 @@ void cliTask(void *pvParameters)
     FreeRTOS_CLIRegisterCommand(&gpio_read_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&gpio_write_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&gpio_dir_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&set_tap_thresh_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&get_tap_thresh_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&set_tap_duration_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&get_tap_duration_CommandStruct);
 
     while (1)
     {
