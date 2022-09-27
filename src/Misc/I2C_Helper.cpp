@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include "I2C_Helper.h"
 
+//TODO: Add mutex locking to I2C commands
+
 int i2c_write_read(uint8_t dev_addr, uint8_t *wbuf, uint8_t wlen, uint8_t *rbuf, uint8_t rlen)
 {
     int ret;

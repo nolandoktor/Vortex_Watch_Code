@@ -17,6 +17,8 @@ extern TaskHandle_t xBlinkTask;
 extern TaskHandle_t xTouchTask;
 extern TaskHandle_t xAccelTask;
 
+TaskHandle_t *task_list[] = {&xMainTask, &xBlinkTask, &xTouchTask, &xAccelTask};
+
 void cliTask(void *pvParameters);
 
 //---------------------- CLI Function Prototypes ---------------------
@@ -31,6 +33,8 @@ static BaseType_t set_tap_thresh_cmd(char *pcWriteBuffer, size_t xWriteBufferLen
 static BaseType_t get_tap_thresh_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t set_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t get_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t suspend_task_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t resume_task_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 // TODO: 32-bit register read function
 // TODO: 32-bit register write function
 // TODO: Set time
@@ -111,6 +115,18 @@ static const CLI_Command_Definition_t get_tap_duration_CommandStruct =
         "get_tap_duration:\r\n Gets required time maximum for tap event\r\n\r\n",
         get_tap_duration_cmd,
         0};
+static const CLI_Command_Definition_t suspend_task_CommandStruct =
+    {
+        "suspend_task",
+        "suspend_task <Watch_Main(0) | Blink(1) | Touch_Task(2) | Accel_Task(3)>:\r\n Suspends specified task\r\n\r\n",
+        suspend_task_cmd,
+        1};
+static const CLI_Command_Definition_t resume_task_CommandStruct =
+    {
+        "resume_task",
+        "resume_task <Watch_Main(0) | Blink(1) | Touch_Task(2) | Accel_Task(3)>:\r\n Resumes specified task\r\n\r\n",
+        resume_task_cmd,
+        1};
 
 //---------------------- CLI Function Definitions ---------------------
 static BaseType_t echoCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
@@ -521,7 +537,92 @@ static BaseType_t get_tap_duration_cmd(char *pcWriteBuffer, size_t xWriteBufferL
     snprintf(pcWriteBuffer, xWriteBufferLen, "Tap duration = %d ms\n", duration);
     return pdFALSE;
 }
+static BaseType_t suspend_task_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *task_name;
 
+    int32_t task_id;
+
+    BaseType_t p1_len;
+    task_name = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+
+    // TODO: Figure out how to set INCLUDE_xTaskGetHandle in FreeRTOS_Config
+    //TaskHandle_t task = xTaskGetHandle(task_name);
+
+    TaskHandle_t task = NULL;
+
+    if (parse_integer_param(task_name, p1_len, &task_id) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+
+    if (task_id >= sizeof(task_list)/sizeof(TaskHandle_t)) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid task ID\n");
+        return pdFALSE;
+    }
+
+    task = *task_list[task_id];
+
+    if (task == NULL) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid task name, failed to lookup assiciated task id\n");
+        return pdFALSE;
+    }
+
+    if (task == xCLITask) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Suspension of CLI task not allowed\n");
+        return pdFALSE;
+    }
+    
+    vTaskSuspend(task);
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Task %s suspended\n", task_name);
+    return pdFALSE;
+}
+static BaseType_t resume_task_cmd(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString)
+{
+    (void)pcCommandString;
+    const char *task_name;
+
+    int32_t task_id;
+
+    BaseType_t p1_len;
+    task_name = FreeRTOS_CLIGetParameter(
+        pcCommandString, // The command string itself.
+        1,               // Return the first parameter.
+        &p1_len          // Store the parameter string length.
+    );
+
+    // TODO: Figure out how to set INCLUDE_xTaskGetHandle in FreeRTOS_Config
+    //TaskHandle_t task = xTaskGetHandle(task_name);
+
+    TaskHandle_t task = NULL;
+
+    if (parse_integer_param(task_name, p1_len, &task_id) < 0) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Failed to parse input\n");
+        return pdFALSE;
+    }
+
+    if (task_id >= sizeof(task_list)/sizeof(TaskHandle_t)) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid task ID\n");
+        return pdFALSE;
+    }
+    task = *task_list[task_id];
+
+    if (task == NULL) {
+        snprintf(pcWriteBuffer, xWriteBufferLen, "Error: Invalid task name, failed to lookup assiciated task id\n");
+        return pdFALSE;
+    }
+    
+    vTaskResume(task);
+
+    snprintf(pcWriteBuffer, xWriteBufferLen, "Task %s resumed\n", task_name);
+    return pdFALSE;
+}
 static int parse_integer_param(const char *param, int len, int32_t *out)
 {
     char data_buf[16] = {'\0'};
@@ -609,6 +710,8 @@ void cliTask(void *pvParameters)
     FreeRTOS_CLIRegisterCommand(&get_tap_thresh_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&set_tap_duration_CommandStruct);
     FreeRTOS_CLIRegisterCommand(&get_tap_duration_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&suspend_task_CommandStruct);
+    FreeRTOS_CLIRegisterCommand(&resume_task_CommandStruct);
 
     while (1)
     {

@@ -155,7 +155,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(CLK_1HZ_PIN), tickClock, RISING);
   initButtonHandler();
 
-
+  
   // Create FreeRTOS Tasks
   xTaskCreate(
     TaskWatchMain,
@@ -165,7 +165,7 @@ void setup() {
     2,          // priority
     &xMainTask
   );
-
+  
   
   xTaskCreate(
     TaskBlink,
@@ -204,6 +204,7 @@ void TaskBlink(void *pvParameters)
     digitalWrite(DEBUG_LED_PIN, LOW);    // turn the LED off by making the voltage LOW
     k_msleep(1000);          // wait for one second
 
+    /*
     UBaseType_t wm_blink = uxTaskGetStackHighWaterMark(xBlinkTask);
     UBaseType_t wm_main = uxTaskGetStackHighWaterMark(xMainTask);
     UBaseType_t wm_cli = uxTaskGetStackHighWaterMark(xCLITask);
@@ -221,6 +222,7 @@ void TaskBlink(void *pvParameters)
     Serial.print("Accel: ");
     Serial.println(wm_accel);
     Serial.println();
+    */
   }
 }
 
