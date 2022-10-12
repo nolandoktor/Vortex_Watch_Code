@@ -16,6 +16,7 @@
 #include "src/Input/CLI_Input.h"
 #include "src/Input/TouchInput.h"
 #include "src/Sensor/Accel_ADXL345.h"
+#include "src/Misc/EventQueue.h"
 
 #define MAIN_TASK_STACK_SIZE 2*configMINIMAL_STACK_SIZE
 #define BLINK_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
@@ -87,6 +88,11 @@ void setup() {
   digitalWrite(LED_MOSFET_EN_PIN, HIGH);
   digitalWrite(CLK_OE_PIN, HIGH);
 
+  // Initiazlize Event Queue
+  if (init_event_queue() < 0) {
+    Serial.println("Error: Failed to initialize event queue");
+  }
+
   // Instantiate Objects
   gauge = new LiFuelGauge(MAX17043);
   frame_buffer = new DoubleBuffer();
@@ -125,8 +131,6 @@ void setup() {
   if (rtc_init() < 0) {
     Serial.println("Error: Failed to initialize RTC");
   }
-  rtc_set_datetime(second_init, minute_init, hour_init, dayOfWeek_init, 
-                   dayOfMonth_init, month_init, year_init);
   rtc_get_time(&sec_, &min_, &hour_);
   test_clock.initClock((int)hour_, (int)min_, (int)sec_);
 

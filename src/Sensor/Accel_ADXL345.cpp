@@ -5,6 +5,7 @@
 #include "../Misc/I2C_Helper.h"
 #include "../Misc/Delay.h"
 #include "../Misc/PinMapping.h"
+#include "../Misc/EventQueue.h"
 
 #define ADXL345_INT_DRDY (1 << 7)
 #define ADXL345_INT_SINGLE_TAP (1 << 6)
@@ -56,13 +57,14 @@ static const float ODR_MAP[ODR_MAP_SIZE] = {
     1600.0,
     3200.0,
 };
+static QueueHandle_t event_queue = NULL;
 
 /**********************************************
  *              Function Prototypes 
  **********************************************/ 
 static void accelTask(void *pvParameters);
 static void accel_int1_handler();
-
+static struct event_message accel_event;
 
 /**********************************************
  *               Public Functions 
@@ -261,6 +263,7 @@ void accelTask(void *pvParameters)
 {
     (void)pvParameters;
     int ret = 0;
+    BaseType_t queue_ret;
 
     xSemaphore = xSemaphoreCreateBinary();
     if (xSemaphore == NULL) {
@@ -287,21 +290,27 @@ void accelTask(void *pvParameters)
         vTaskDelete(xAccelTask);
     }
 
+    event_queue = get_event_queue();
+    if (event_queue == NULL) {
+        Serial.println("Error: Accelerometer task failed to get handle to event queue");
+        vTaskDelete(xAccelTask);
+    }
+
     //Clear interrupt pins to init IMU
     i2c_write_byte(ADXL345_DEFAULT_ADDRESS, ADXL345_REG_INT_ENABLE, 0x00);
 
-    uint8_t int_mask = ADXL345_INT_SINGLE_TAP;//ADXL345_INT_DRDY;
+    uint8_t int_mask = ADXL345_INT_DOUBLE_TAP;//ADXL345_INT_SINGLE_TAP;//ADXL345_INT_DRDY;
 
     //Configure TAP settings
     i2c_write_byte(ADXL345_DEFAULT_ADDRESS, ADXL345_REG_THRESH_TAP, 0x40);
     i2c_write_byte(ADXL345_DEFAULT_ADDRESS, ADXL345_REG_DUR, 0x08);
-    i2c_write_byte(ADXL345_DEFAULT_ADDRESS, ADXL345_REG_LATENT, 0x30); 
+    i2c_write_byte(ADXL345_DEFAULT_ADDRESS, ADXL345_REG_LATENT, 0x10); 
     i2c_write_byte(ADXL345_DEFAULT_ADDRESS, ADXL345_REG_TAP_AXES, 0x01); 
 
     //accel_set_odr(300);
     accel_set_tap_thresh(12000.0);
     //accel_set_tap_duration(1);
-    accel_set_tap_latent(500);
+    accel_set_tap_latent(200);
     accel_set_tap_window(72);
 
     float odr, thresh_mg;
@@ -380,6 +389,13 @@ void accelTask(void *pvParameters)
         }
         if (int_src & ADXL345_INT_DOUBLE_TAP) {
             Serial.println("Double tap detected");
+            accel_event.event = ACCEL_DOUBLE_TAP;
+
+            // Don't block if queue is full
+            queue_ret = xQueueSend(event_queue, (void*)&accel_event, (TickType_t)0);
+            if (queue_ret == errQUEUE_FULL) {
+                Serial.println("Error: Queue full, double_tap event not sent");
+            }
         }
         if (int_src & ADXL345_INT_SINGLE_TAP) {
             uint32_t ts = millis();
