@@ -1,5 +1,6 @@
 #pragma once
 
+#include <FreeRTOS_SAMD21.h>
 #include "StateElement.h"
 #include "../Misc/GlobalDefines.h"
 
@@ -12,6 +13,7 @@ class StateManager
     StateElement *state_list[NUM_WATCH_STATES];
     watch_state_t current_state;
     uint8_t scratch[STATE_MANAGER_SCRATCH] __attribute__((aligned(4)));
+    QueueHandle_t event_queue;
   public:
     StateManager();
     int init(watch_state_t start_state);

@@ -3,6 +3,7 @@
 #include "FreeTouch/Adafruit_FreeTouch_alt.h"
 #include "ButtonHandler.h"
 #include "../Misc/Delay.h"
+#include "../Misc/EventQueue.h"
 
 #define TOUCH_STACK_SIZE 512
 
@@ -24,6 +25,7 @@ static Adafruit_FreeTouch_alt qt[NUM_TOUCH_PADS] = {
 static uint16_t prev_touch[NUM_TOUCH_PADS];
 bool button_pressed[NUM_TOUCH_PADS] = {false};
 static volatile uint32_t timers[NUM_TOUCH_PADS] = {0};
+static QueueHandle_t event_queue;
 
 static void touchTask(void *pvParameters);
 
@@ -41,6 +43,13 @@ void init_touch_task()
 static void touchTask(void *pvParameters)
 {
     (void)pvParameters;
+
+    event_queue = get_event_queue();
+    if (event_queue == NULL) {
+        Serial.println("Error: Touch task failed to get handle to event queue");
+        vTaskDelete(xTouchTask);
+    }
+
     for (uint8_t pad = 0; pad < NUM_TOUCH_PADS; pad++)
     {
         qt[pad].begin();
@@ -68,6 +77,7 @@ static void touchTask(void *pvParameters)
             }
             else if (current_touch < HYST_LOW && button_pressed[pad])
             {
+                struct event_message button_event;
                 Serial.print(event_ts);
                 Serial.print(": Button ");
                 Serial.print(pad);
@@ -78,10 +88,15 @@ static void touchTask(void *pvParameters)
                 if (delta < 500) {
                     Serial.println("Short Press");
                     shortPresses[1] = true;
+                    button_event.event = B2_SHORT_PRESS;
                 }
                 else{
                     Serial.println("Long Press");
                     longPresses[1] = true;
+                    button_event.event = B2_LONG_PRESS;
+                }
+                if (xQueueSend(event_queue, (void*)&button_event, (TickType_t)0) == errQUEUE_FULL) {
+                    Serial.println("Error: Queue full, touch event not sent");
                 }
             }
         }

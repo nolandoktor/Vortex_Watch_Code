@@ -3,6 +3,7 @@
 #include "StateElement.h"
 #include "../Misc/GlobalDefines.h"
 #include "../Input/ButtonHandler.h"
+#include "../Misc/EventQueue.h"
 
 StateManager::StateManager()
 {
@@ -14,6 +15,13 @@ StateManager::StateManager()
 int StateManager::init(watch_state_t start_state)
 {
   Serial.println("State manager init");
+
+  event_queue = get_event_queue();
+  if (event_queue == NULL) {
+    Serial.print("Error: State manager failed to get handle to event queue");
+    return -1;
+  }
+
   bool init_success = true;
   for (int i=0; i<NUM_WATCH_STATES; i++) {
     if (state_list[i] != NULL) {
@@ -70,10 +78,41 @@ int StateManager::change_state(watch_state_t next_state)
 }
 int StateManager::update()
 {
+    int ret;
     if (state_list[current_state] == NULL) {
         return -1;
     }
-    int ret = state_list[current_state]->update();
+
+    UBaseType_t num_events = uxQueueMessagesWaiting(event_queue);
+    struct event_message new_event;
+    for (int i=0; i<num_events; i++) {
+      if(xQueueReceive(event_queue, &new_event, (TickType_t)0) == pdFALSE) {
+        Serial.println("Error: Failed to receive message from event queue");
+        continue;
+      }
+      switch(new_event.event) {
+        case B1_SHORT_PRESS:
+          Serial.println("B1_SHORT_PRESS");
+          break;
+        case B1_LONG_PRESS:
+          Serial.println("B1_LONG_PRESS");
+          break;
+        case B2_SHORT_PRESS:
+          Serial.println("B2_SHORT_PRESS");
+          break;
+        case B2_LONG_PRESS:
+          Serial.println("B2_LONG_PRESS");
+          break;
+        case ACCEL_SINGLE_TAP:
+          Serial.println("ACCEL_SINGLE_TAP");
+          break;
+        case ACCEL_DOUBLE_TAP:
+          Serial.println("ACCEL_DOUBLE_TAP");
+          break;
+      }
+    }
+
+    ret = state_list[current_state]->update();
     if (ret < 0) {
         return ret;
     }

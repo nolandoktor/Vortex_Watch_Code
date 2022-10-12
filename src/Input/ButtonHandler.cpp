@@ -1,25 +1,29 @@
+#include <FreeRTOS_SAMD21.h>
 #include <Arduino.h>
 #include <ArduinoLowPower.h>
 #include "ButtonHandler.h"
 #include "../Misc/PinMapping.h"
+#include "../Misc/EventQueue.h"
 
-//Button interrupt variables
+// Button interrupt variables
 static int intPins[2] = {BUTTON0_PIN, BUTTON1_PIN};
 static volatile uint32_t timers[2] = {0, 0};
 static volatile int prevStates[2] = {0, 0};
 
+static QueueHandle_t event_queue;
+
 volatile bool longPresses[2];
 volatile bool shortPresses[2];
-
 
 static void button0_interrupt_handler();
 static void button1_interrupt_handler();
 
-// TODO: Cleanup button logic to more clearly divide touch IC and freetouch inputs
+// TODO: Cleanup button logic to more clearly divide touch IC and freetouch inputs. 
+// Button 1 logic no longer needed here
 
 void resetButtonStates()
 {
-  for (int i=0; i<2; i++)
+  for (int i = 0; i < 2; i++)
   {
     longPresses[i] = false;
     shortPresses[i] = false;
@@ -27,46 +31,82 @@ void resetButtonStates()
 }
 void enableButtonInterrupts()
 {
-  //PCICR |= (1 <<PCIE0);
-  //PCMSK0 |= ((1 << PCINT5) | (1 << PCINT6));
-    //Not supported on M0
+  // PCICR |= (1 <<PCIE0);
+  // PCMSK0 |= ((1 << PCINT5) | (1 << PCINT6));
+  // Not supported on M0
 }
 void initButtonHandler()
 {
   int num_buttons = 1;
+  event_queue = get_event_queue();
+  if (event_queue == NULL) {
+    Serial.println("Error: Button handler failed to get handle to event queue");
+  }
   resetButtonStates();
-  for (int i=0; i<num_buttons; i++)
+  for (int i = 0; i < num_buttons; i++)
   {
     pinMode(intPins[i], INPUT_PULLUP);
     prevStates[i] = digitalRead(intPins[i]);
   }
-  //Attach interrupt handlers for pins 
+  // Attach interrupt handlers for pins
   attachInterrupt(digitalPinToInterrupt(intPins[0]), button0_interrupt_handler, CHANGE);
-  //LowPower.attachInterruptWakeup(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
+  // LowPower.attachInterruptWakeup(digitalPinToInterrupt(intPins[1]), button1_interrupt_handler, CHANGE);
 }
 
 static void button_function(int idx)
 {
   int pin_status = digitalRead(intPins[idx]);
   uint32_t event_ts = millis();
-  if (pin_status == 1) {
+  if (pin_status == 1)
+  {
     Serial.print("Button ");
     Serial.print(intPins[idx]);
     Serial.println(" pressed");
     timers[idx] = event_ts;
   }
-  else {
+  else
+  {
     Serial.print("Button ");
     Serial.print(intPins[idx]);
     Serial.println(" released");
     int32_t delta = event_ts - timers[idx];
-    if (delta < 500) {
+    struct event_message button_event;
+    if (delta < 500)
+    {
       Serial.println("Short Press");
       shortPresses[idx] = true;
+
+      if (event_queue != NULL)
+      {
+        if (idx == 0)
+        {
+          button_event.event = B1_SHORT_PRESS;
+        }
+        else
+        {
+          button_event.event = B2_SHORT_PRESS;
+        }
+      }
     }
-    else{
+    else
+    {
       Serial.println("Long Press");
       longPresses[idx] = true;
+
+      if (event_queue != NULL)
+      {
+        if (idx == 0)
+        {
+          button_event.event = B1_LONG_PRESS;
+        }
+        else
+        {
+          button_event.event = B2_LONG_PRESS;
+        }
+      }
+    }
+    if (xQueueSendFromISR(event_queue, (void *)&button_event, NULL) == errQUEUE_FULL) {
+      Serial.println("Error: Queue full, button event not sent");
     }
   }
 }
@@ -78,6 +118,3 @@ static void button1_interrupt_handler()
 {
   button_function(1);
 }
-
-
-
