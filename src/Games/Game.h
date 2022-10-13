@@ -8,11 +8,10 @@ class Game
 {
   protected:
     int N;
-  
   public:
     Game() {}
     virtual void reset()=0;
-    virtual void update()=0;
+    virtual void update(uint16_t events)=0;
     virtual void draw(DoubleBuffer *lBuffer)=0;
     virtual bool gameIsOver()=0;
 };
@@ -84,7 +83,7 @@ class TimingGame : public Game
   public:
     TimingGame();
     void reset();
-    void update();
+    void update(uint16_t events);
     void draw(DoubleBuffer *lBuffer);
     bool gameIsOver() {return endGame;}
 

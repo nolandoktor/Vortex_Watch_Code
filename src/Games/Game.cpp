@@ -117,7 +117,7 @@ void TimingGame::reset()
   //spawnNode(5, rand()%TG_Node::NUM_DIRECTIONS, /*TG_Node::NORMAL*/rand()%TG_Node::NUM_TYPES);
   //update_timer = millis();
 }
-void TimingGame::update()
+void TimingGame::update(uint16_t events)
 {
   if (longPresses[up_button] || longPresses[down_button])
   {

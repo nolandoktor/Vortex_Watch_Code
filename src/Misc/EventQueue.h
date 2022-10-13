@@ -16,6 +16,10 @@ typedef enum
     ACCEL_DOUBLE_TAP
 } event_type_t;
 
+#define ANY_BUTTON_PRESS ((1 << B0_SHORT_PRESS) | (1 << B1_SHORT_PRESS) | (1 << B0_LONG_PRESS) | (1 << B1_LONG_PRESS))
+#define ANY_SHORT_PRESS ((1 << B0_SHORT_PRESS) | (1 << B1_SHORT_PRESS))
+#define ANY_LONG_PRESS ((1 << B0_LONG_PRESS) | (1 << B1_LONG_PRESS))
+
 struct event_message {
     event_type_t event;
     uint8_t ctx[EVENT_CTX_LEN];

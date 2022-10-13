@@ -12,10 +12,6 @@
 #include "../Games/Game.h"
 #include "../Misc/EventQueue.h"
 
-#define ANY_BUTTON_PRESS ((1 << B0_SHORT_PRESS) | (1 << B1_SHORT_PRESS) | (1 << B0_LONG_PRESS) | (1 << B1_LONG_PRESS))
-#define ANY_SHORT_PRESS ((1 << B0_SHORT_PRESS) | (1 << B1_SHORT_PRESS))
-#define ANY_LONG_PRESS ((1 << B0_LONG_PRESS) | (1 << B1_LONG_PRESS))
-
 StateElement::StateElement(StateManager *sm, DoubleBuffer *fb) 
 {
     state_manager = sm;
@@ -73,7 +69,7 @@ int SleepState::update()
 
     watch_state_t next_state;
     bool state_change = false;
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS))
+    if (events & ANY_BUTTON_PRESS)
     {
         next_state = AWAKE_STATE;
         state_change = true;
@@ -211,7 +207,7 @@ int SetHourState::update()
     }
     frame_buffer->update();
 
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
+    if (events & ANY_BUTTON_PRESS) {
         timeout_timer = millis();
     }
     if (events & (1 << B0_SHORT_PRESS)) {
@@ -224,7 +220,7 @@ int SetHourState::update()
         if (hour < 0)
         hour = N_LEDS-1;
     }
-    if ((events & (1 << B0_LONG_PRESS)) || (events & (1 << B1_LONG_PRESS))) {
+    if (events & ANY_LONG_PRESS) {
         next_state = SET_MIN_STATE;
         state_change = true;
     }
@@ -301,7 +297,7 @@ int SetMinuteState::update()
     }
     frame_buffer->update();
 
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
+    if (events & ANY_BUTTON_PRESS) {
         timeout_timer = millis();
     }
     if (events & (1 << B0_SHORT_PRESS)) {
@@ -315,7 +311,7 @@ int SetMinuteState::update()
         if (minute < 0)
         minute = 60-1;
     }
-    if ((events & (1 << B0_LONG_PRESS)) || (events & (1 << B1_LONG_PRESS))) {
+    if (events & ANY_LONG_PRESS) {
         next_state = FACE_SELECT_STATE;
         state_change = true;
     }
@@ -422,7 +418,7 @@ int BatteryState::update()
         warning_dir *= -1;
     }
 
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
+    if (events & ANY_BUTTON_PRESS) {
         timeout_timer = millis();
     }
 
@@ -474,11 +470,11 @@ int TimingGameState::update()
     bool state_change = false;
 
     uint16_t events = state_manager->get_event_mask();
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
+    if (events & ANY_BUTTON_PRESS) {
         timeout_timer = millis();
     }
 
-    watch_game->update();
+    watch_game->update(events);
     watch_game->draw(frame_buffer);
 
     if (watch_game->gameIsOver()) {
@@ -536,7 +532,7 @@ int FaceSelectState::update()
     }
     frame_buffer->update();
 
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
+    if (events & ANY_BUTTON_PRESS) {
         timeout_timer = millis();
     }
 
@@ -555,7 +551,7 @@ int FaceSelectState::update()
         }
         watch_face_manager->change_face(next_face);
     }
-    if ((events & (1 << B0_LONG_PRESS)) || (events & (1 << B1_LONG_PRESS))) {
+    if (events & ANY_LONG_PRESS) {
         next_state = AWAKE_STATE;
         state_change = true;
     }
@@ -594,7 +590,7 @@ int FlashLightState::update()
     }
     frame_buffer->update();
 
-    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
+    if (events & ANY_BUTTON_PRESS) {
         next_state = AWAKE_STATE;
         state_change = true;
     }
