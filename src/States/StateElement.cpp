@@ -10,6 +10,11 @@
 #include "../Display/WatchFace.h"
 #include "../Display/WatchFaceManager.h"
 #include "../Games/Game.h"
+#include "../Misc/EventQueue.h"
+
+#define ANY_BUTTON_PRESS ((1 << B0_SHORT_PRESS) | (1 << B1_SHORT_PRESS) | (1 << B0_LONG_PRESS) | (1 << B1_LONG_PRESS))
+#define ANY_SHORT_PRESS ((1 << B0_SHORT_PRESS) | (1 << B1_SHORT_PRESS))
+#define ANY_LONG_PRESS ((1 << B0_LONG_PRESS) | (1 << B1_LONG_PRESS))
 
 StateElement::StateElement(StateManager *sm, DoubleBuffer *fb) 
 {
@@ -52,6 +57,8 @@ int SleepState::on_enter(watch_state_t prev_state)
 }
 int SleepState::update()
 {
+    uint16_t events = state_manager->get_event_mask();
+
     frame_buffer->clear();
     frame_buffer->update();
    
@@ -66,7 +73,7 @@ int SleepState::update()
 
     watch_state_t next_state;
     bool state_change = false;
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button])
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS))
     {
         next_state = AWAKE_STATE;
         state_change = true;
@@ -125,26 +132,27 @@ int AwakeState::update()
     watch_state_t next_state;
     bool state_change = false;
 
+    uint16_t events = state_manager->get_event_mask();
     watch_face_manager->update();
     watch_face_manager->draw(frame_buffer);
     frame_buffer->update();
     
-    if (longPresses[up_button])
+    if (events & (1 << B0_LONG_PRESS))
     {
         next_state = SET_HOUR_STATE;
         state_change = true;
     }
-    else if (longPresses[down_button])
+    else if (events & (1 << B1_LONG_PRESS))
     {
         next_state = TIMING_GAME_STATE;
         state_change = true;
     }
-    else if (shortPresses[up_button])
+    else if (events & (1 << B0_SHORT_PRESS))
     {
         next_state = BATTERY_LEVEL_STATE;
         state_change = true;
     }
-    else if (shortPresses[down_button])
+    else if (events & (1 << B1_SHORT_PRESS))
     {
         next_state = SLEEP_STATE;
         state_change = true;
@@ -185,6 +193,7 @@ int SetHourState::update()
     watch_state_t next_state;
     bool state_change = false;
 
+    uint16_t events = state_manager->get_event_mask();
     frame_buffer->clear();
     if (flash_cnt++ >= flash_period) {
         flash_cnt = 0;
@@ -202,20 +211,20 @@ int SetHourState::update()
     }
     frame_buffer->update();
 
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
         timeout_timer = millis();
     }
-    if (shortPresses[up_button]) {
+    if (events & (1 << B0_SHORT_PRESS)) {
         hour++;
         if (hour >= N_LEDS)
         hour = 0;
     }
-    else if (shortPresses[down_button]) {
+    else if (events & (1 << B1_SHORT_PRESS)) {
         hour--;
         if (hour < 0)
         hour = N_LEDS-1;
     }
-    if (longPresses[up_button] || longPresses[down_button]) {
+    if ((events & (1 << B0_LONG_PRESS)) || (events & (1 << B1_LONG_PRESS))) {
         next_state = SET_MIN_STATE;
         state_change = true;
     }
@@ -266,6 +275,7 @@ int SetMinuteState::update()
     watch_state_t next_state;
     bool state_change = false;
 
+    uint16_t events = state_manager->get_event_mask();
     frame_buffer->clear();
     if (flash_cnt++ >= flash_period) {
         flash_cnt = 0;
@@ -291,21 +301,21 @@ int SetMinuteState::update()
     }
     frame_buffer->update();
 
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
         timeout_timer = millis();
     }
-    if (shortPresses[up_button]) {
+    if (events & (1 << B0_SHORT_PRESS)) {
         minute++;
         if (minute >= 60) {
             hour = 0;
         }
     }
-    else if (shortPresses[down_button]) {
+    else if (events & (1 << B1_SHORT_PRESS)) {
         minute--;
         if (minute < 0)
         minute = 60-1;
     }
-    if (longPresses[up_button] || longPresses[down_button]) {
+    if ((events & (1 << B0_LONG_PRESS)) || (events & (1 << B1_LONG_PRESS))) {
         next_state = FACE_SELECT_STATE;
         state_change = true;
     }
@@ -367,6 +377,7 @@ int BatteryState::update()
     watch_state_t next_state;
     bool state_change = false;
 
+    uint16_t events = state_manager->get_event_mask();
     int charge_idx = (int)((N_LEDS*charge_level) / 100);
     int intensity = COLOR_RES;
     int warning_thresh = 10;
@@ -411,16 +422,16 @@ int BatteryState::update()
         warning_dir *= -1;
     }
 
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
         timeout_timer = millis();
     }
 
-    if (shortPresses[up_button])
+    if (events & (1 << B0_SHORT_PRESS))
     {
         next_state = AWAKE_STATE;
         state_change = true;
     }
-    else if (shortPresses[down_button])
+    else if (events & (1 << B1_SHORT_PRESS) )
     {
         next_state = SLEEP_STATE;
         state_change = true;
@@ -462,7 +473,8 @@ int TimingGameState::update()
     watch_state_t next_state;
     bool state_change = false;
 
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+    uint16_t events = state_manager->get_event_mask();
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
         timeout_timer = millis();
     }
 
@@ -511,6 +523,7 @@ int FaceSelectState::update()
 {
     watch_state_t next_state;
     bool state_change = false;
+    uint16_t events = state_manager->get_event_mask();
 
     if (flash_cnt++ >= flash_period) {
         flash_cnt = 0;
@@ -523,16 +536,16 @@ int FaceSelectState::update()
     }
     frame_buffer->update();
 
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
         timeout_timer = millis();
     }
 
     watch_face_t current_face = watch_face_manager->get_current_face();
-    if (shortPresses[up_button]) {
+    if (events & (1 << B0_SHORT_PRESS)) {
         watch_face_t next_face = (watch_face_t)((current_face + 1) % NUM_WATCH_FACES);
         watch_face_manager->change_face(next_face);
     }
-    else if (shortPresses[down_button]) {
+    else if (events & (1 << B1_SHORT_PRESS)) {
         watch_face_t next_face;
         if ((int)current_face > 0) {
             next_face = (watch_face_t)(current_face - 1);
@@ -542,7 +555,7 @@ int FaceSelectState::update()
         }
         watch_face_manager->change_face(next_face);
     }
-    if (longPresses[up_button] || longPresses[down_button]) {
+    if ((events & (1 << B0_LONG_PRESS)) || (events & (1 << B1_LONG_PRESS))) {
         next_state = AWAKE_STATE;
         state_change = true;
     }
@@ -573,18 +586,15 @@ int FlashLightState::update()
 {
     watch_state_t next_state;
     bool state_change = false;
-    
+    uint16_t events = state_manager->get_event_mask();
+
     frame_buffer->clear();
     for (int i=0; i<N_LEDS; i++) {
         frame_buffer->setColorVal(i, COLOR_RES, COLOR_RES, COLOR_RES);
     }
     frame_buffer->update();
 
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
-        timeout_timer = millis();
-    }
-
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button]) {
+    if (events & (1 << B0_SHORT_PRESS) || events & (1 << B1_SHORT_PRESS) || events & (1 << B0_LONG_PRESS) || events & (1 << B1_LONG_PRESS)) {
         next_state = AWAKE_STATE;
         state_change = true;
     }

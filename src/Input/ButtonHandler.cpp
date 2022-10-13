@@ -80,11 +80,11 @@ static void button_function(int idx)
       {
         if (idx == 0)
         {
-          button_event.event = B1_SHORT_PRESS;
+          button_event.event = B0_SHORT_PRESS;
         }
         else
         {
-          button_event.event = B2_SHORT_PRESS;
+          button_event.event = B1_SHORT_PRESS;
         }
       }
     }
@@ -97,11 +97,11 @@ static void button_function(int idx)
       {
         if (idx == 0)
         {
-          button_event.event = B1_LONG_PRESS;
+          button_event.event = B0_LONG_PRESS;
         }
         else
         {
-          button_event.event = B2_LONG_PRESS;
+          button_event.event = B1_LONG_PRESS;
         }
       }
     }

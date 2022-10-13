@@ -26,7 +26,6 @@ class StateElement {
     virtual int update() {return 0;}
     virtual const char* get_name() {return "INVALID_STATE";}
     virtual bool get_auto_input_reset() {return auto_input_reset;}
-    
 };
 
 class SleepState : public StateElement {

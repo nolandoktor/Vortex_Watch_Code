@@ -14,6 +14,7 @@ class StateManager
     watch_state_t current_state;
     uint8_t scratch[STATE_MANAGER_SCRATCH] __attribute__((aligned(4)));
     QueueHandle_t event_queue;
+    uint16_t event_mask;
   public:
     StateManager();
     int init(watch_state_t start_state);
@@ -22,4 +23,5 @@ class StateManager
     int update();
     const char* get_state_name(watch_state_t state);
     uint8_t *get_scratch() {return scratch;}
+    uint16_t get_event_mask() {return event_mask;}
 };

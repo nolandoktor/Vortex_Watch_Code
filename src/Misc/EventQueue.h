@@ -8,10 +8,10 @@
 
 typedef enum
 {
+    B0_SHORT_PRESS,
+    B0_LONG_PRESS,
     B1_SHORT_PRESS,
     B1_LONG_PRESS,
-    B2_SHORT_PRESS,
-    B2_LONG_PRESS,
     ACCEL_SINGLE_TAP,
     ACCEL_DOUBLE_TAP
 } event_type_t;

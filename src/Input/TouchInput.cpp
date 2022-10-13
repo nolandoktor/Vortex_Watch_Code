@@ -88,12 +88,12 @@ static void touchTask(void *pvParameters)
                 if (delta < 500) {
                     Serial.println("Short Press");
                     shortPresses[1] = true;
-                    button_event.event = B2_SHORT_PRESS;
+                    button_event.event = B1_SHORT_PRESS;
                 }
                 else{
                     Serial.println("Long Press");
                     longPresses[1] = true;
-                    button_event.event = B2_LONG_PRESS;
+                    button_event.event = B1_LONG_PRESS;
                 }
                 if (xQueueSend(event_queue, (void*)&button_event, (TickType_t)0) == errQUEUE_FULL) {
                     Serial.println("Error: Queue full, touch event not sent");

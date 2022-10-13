@@ -16,6 +16,8 @@ int StateManager::init(watch_state_t start_state)
 {
   Serial.println("State manager init");
 
+  event_mask = 0;
+
   event_queue = get_event_queue();
   if (event_queue == NULL) {
     Serial.print("Error: State manager failed to get handle to event queue");
@@ -91,17 +93,17 @@ int StateManager::update()
         continue;
       }
       switch(new_event.event) {
+        case B0_SHORT_PRESS:
+          Serial.println("B0_SHORT_PRESS");
+          break;
+        case B0_LONG_PRESS:
+          Serial.println("B0_LONG_PRESS");
+          break;
         case B1_SHORT_PRESS:
           Serial.println("B1_SHORT_PRESS");
           break;
         case B1_LONG_PRESS:
           Serial.println("B1_LONG_PRESS");
-          break;
-        case B2_SHORT_PRESS:
-          Serial.println("B2_SHORT_PRESS");
-          break;
-        case B2_LONG_PRESS:
-          Serial.println("B2_LONG_PRESS");
           break;
         case ACCEL_SINGLE_TAP:
           Serial.println("ACCEL_SINGLE_TAP");
@@ -109,7 +111,12 @@ int StateManager::update()
         case ACCEL_DOUBLE_TAP:
           Serial.println("ACCEL_DOUBLE_TAP");
           break;
+        default:
+          Serial.print("Error: Invalid state ");
+          Serial.println(new_event.event);
+          break;
       }
+      event_mask |= (1 << new_event.event);
     }
 
     ret = state_list[current_state]->update();
@@ -118,6 +125,7 @@ int StateManager::update()
     }
     if (state_list[current_state]->get_auto_input_reset()) {
         resetButtonStates();
+        event_mask = 0;
     }
     return 0;
 }
