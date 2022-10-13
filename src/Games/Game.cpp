@@ -2,6 +2,7 @@
 #include "../Display/DoubleBuffer.h"
 #include "../Input/ButtonHandler.h"
 #include "../Misc/GlobalDefines.h"
+#include "../Misc/EventQueue.h"
 #include "Game.h"
 
 TG_Node::TG_Node()
@@ -119,7 +120,7 @@ void TimingGame::reset()
 }
 void TimingGame::update(uint16_t events)
 {
-  if (longPresses[up_button] || longPresses[down_button])
+  if (events & ANY_LONG_PRESS)
   {
     Serial.println("Manual exit");
     resetButtonStates();
@@ -131,19 +132,19 @@ void TimingGame::update(uint16_t events)
     case INTRO:
     {
       Serial.println("Game Intro");
-      intro();
+      intro(events);
       break;
     }
     case GAMEPLAY:
     {
       Serial.println("Gameplay");
-      gameplay();
+      gameplay(events);
       break;
     }
     case END:
     {
       Serial.println("Game End");
-      end();
+      end(events);
       break;
     }
   }
@@ -197,7 +198,7 @@ void TimingGame::draw(DoubleBuffer *lBuffer)
   }
   lBuffer->update();
 }
-void TimingGame::intro()
+void TimingGame::intro(uint16_t events)
 {
   if (goodFlash)
   {
@@ -212,7 +213,7 @@ void TimingGame::intro()
       badFlash = 0;
   }
   
-  if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button])
+  if (events & ANY_BUTTON_PRESS)
   {
     bool atZeroPos = false;
     for (int i=0; i<NUM_NODES; i++)
@@ -231,7 +232,7 @@ void TimingGame::intro()
           }
           case TG_Node::UP:
           {
-            if (shortPresses[up_button] || longPresses[up_button])
+            if (events & (1 << B0_SHORT_PRESS))
             {
               goodTrigger(false);
               typeCounters[TG_Node::UP]++;
@@ -244,7 +245,7 @@ void TimingGame::intro()
           }
           case TG_Node::DOWN:
           {
-            if (shortPresses[down_button] || longPresses[down_button])
+            if (events & (1 << B1_SHORT_PRESS))
             {
               goodTrigger(false);
               typeCounters[TG_Node::DOWN]++;
@@ -320,7 +321,7 @@ void TimingGame::intro()
   if (gameOver)
     state = END;
 }
-void TimingGame::gameplay()
+void TimingGame::gameplay(uint16_t events)
 {
   if (goodFlash)
   {
@@ -335,7 +336,7 @@ void TimingGame::gameplay()
       badFlash = 0;
   }
   
-  if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button])
+  if (events & ANY_BUTTON_PRESS)
   {
     bool atZeroPos = false;
     for (int i=0; i<NUM_NODES; i++)
@@ -353,7 +354,7 @@ void TimingGame::gameplay()
           }
           case TG_Node::UP:
           {
-            if (shortPresses[up_button] || longPresses[up_button])
+            if (events & (1 << B0_SHORT_PRESS))
             {
               goodTrigger();
             }
@@ -365,7 +366,7 @@ void TimingGame::gameplay()
           }
           case TG_Node::DOWN:
           {
-            if (shortPresses[down_button] || longPresses[down_button])
+            if (events & (1 << B1_SHORT_PRESS))
             {
               goodTrigger();
             }
@@ -488,7 +489,7 @@ if (typeCounters[TG_Node::NORMAL] < TUTORIAL_VAL)
   if (gameOver)
     state = END;
 }
-void TimingGame::end()
+void TimingGame::end(uint16_t events)
 {
   if (millis() - update_timer < 50)
     return;
@@ -530,7 +531,7 @@ void TimingGame::end()
       breath_dir *= -1;
     }
     
-    if (shortPresses[up_button] || shortPresses[down_button] || longPresses[up_button] || longPresses[down_button])
+    if (events & ANY_BUTTON_PRESS)
     {
       endGame = true; 
     }

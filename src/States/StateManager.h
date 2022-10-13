@@ -24,4 +24,5 @@ class StateManager
     const char* get_state_name(watch_state_t state);
     uint8_t *get_scratch() {return scratch;}
     uint16_t get_event_mask() {return event_mask;}
+    void reset_event_mask() {event_mask = 0;}
 };

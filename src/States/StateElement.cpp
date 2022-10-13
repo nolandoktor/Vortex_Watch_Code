@@ -453,7 +453,7 @@ int BatteryState::on_enter(watch_state_t prev_state)
 TimingGameState::TimingGameState(StateManager *sm, DoubleBuffer *fb, Game *game) : StateElement(sm, fb)
 {
     watch_game = game;
-    auto_input_reset = false;
+    auto_input_reset = true;
 }
 int TimingGameState::init()
 {

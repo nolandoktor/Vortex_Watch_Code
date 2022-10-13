@@ -125,7 +125,7 @@ int StateManager::update()
     }
     if (state_list[current_state]->get_auto_input_reset()) {
         resetButtonStates();
-        event_mask = 0;
+        reset_event_mask();
     }
     return 0;
 }

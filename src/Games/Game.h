@@ -88,9 +88,9 @@ class TimingGame : public Game
     bool gameIsOver() {return endGame;}
 
 
-    void intro();
-    void gameplay();
-    void end();
+    void intro(uint16_t events);
+    void gameplay(uint16_t events);
+    void end(uint16_t events);
 
     void spawnNode(int pos, int dir, int type);
     void goodTrigger(bool real=true);
