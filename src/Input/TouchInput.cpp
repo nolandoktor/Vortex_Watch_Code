@@ -4,6 +4,15 @@
 #include "ButtonHandler.h"
 #include "../Misc/Delay.h"
 #include "../Misc/EventQueue.h"
+#include "../Misc/Revision.h"
+
+#if BOARD_REVISON == REV_6V0
+#define TOUCH_PIN 3
+#elif BOARD_REVISION == REV_6V1
+#define TOUCH_PIN 4
+#else
+#error "Invalid Board Revision"
+#endif
 
 #define TOUCH_STACK_SIZE 512
 
@@ -19,7 +28,7 @@ typedef enum
 TaskHandle_t xTouchTask = NULL;
 
 static Adafruit_FreeTouch_alt qt[NUM_TOUCH_PADS] = {
-    Adafruit_FreeTouch_alt(PORTA, 3, OVERSAMPLE_4, RESISTOR_50K, FREQ_MODE_NONE),
+    Adafruit_FreeTouch_alt(PORTA, TOUCH_PIN, OVERSAMPLE_4, RESISTOR_50K, FREQ_MODE_NONE),
     // TODO: Add another definition for switch 1
 };
 static uint16_t prev_touch[NUM_TOUCH_PADS];
