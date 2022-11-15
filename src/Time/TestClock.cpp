@@ -44,6 +44,7 @@ byte TestClock::getHours() volatile
     {
       return h-12;
     }
+    return h;
   }
 }
 void TestClock::update() volatile

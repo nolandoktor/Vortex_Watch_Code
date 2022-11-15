@@ -177,5 +177,6 @@ int rtc_display_time()
 
   String currentDate = rtc_rv8803.stringDateUSA();
   Serial.println(currentDate);
+  return 0;
 }
 

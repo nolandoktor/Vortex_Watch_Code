@@ -69,7 +69,7 @@ class SetHourState : public StateElement {
     int on_exit(watch_state_t next_state);
     int update();
     const char* get_name() {return "SET_HOUR_STATE";} 
-    int set_flash_period(uint16_t fp) {flash_period = fp;}
+    void set_flash_period(uint16_t fp) {flash_period = fp;}
 };
 
 class SetMinuteState : public StateElement {
@@ -88,7 +88,7 @@ class SetMinuteState : public StateElement {
     int on_exit(watch_state_t next_state);
     int update();
     const char* get_name() {return "SET_MINUTE_STATE";} 
-    int set_flash_period(uint16_t fp) {flash_period = fp;}
+    void set_flash_period(uint16_t fp) {flash_period = fp;}
 };
 
 class BatteryState : public StateElement {
